@@ -1,0 +1,12 @@
+﻿# Dev/local — only index.html is needed for GitHub Pages
+.claude/
+server.log
+*.bat
+serve.ps1
+Dashboard.html
+app.js
+styles.css
+
+# OS junk
+Thumbs.db
+.DS_Store
