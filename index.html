@@ -5,21 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>每日任務儀表板</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='80'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E" />
-<script>
-// Independent fail-safe: Esc closes any open modal-backdrop, even if main script breaks.
-window.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-backdrop:not([hidden])').forEach(function(el) { el.hidden = true; });
-  }
-});
-</script>
-<script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"
-        onerror="console.warn('Tesseract failed to load from CDN. Tesseract OCR disabled; Claude Vision still works.')"></script>
 <style>
-/* ================================================================
-   Notion-style dashboard
-   ================================================================ */
-
 :root {
   --bg: #ffffff;
   --text: #37352f;
@@ -44,7 +30,6 @@ window.addEventListener('keydown', function(e) {
   --pill-low-bg:   #d3e5ef;
   --pill-low-fg:   #1f5478;
 
-  --callout-bg: #f7f6f3;
   --accent: #2383e2;
   --danger: #eb5757;
 
@@ -63,7 +48,6 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-
 button { font-family: inherit; }
 input, textarea { font-family: inherit; }
 
@@ -81,75 +65,6 @@ input, textarea { font-family: inherit; }
   display: flex; gap: 8px; align-items: center; margin-bottom: 32px;
 }
 .dot-sep { opacity: 0.6; }
-
-.callout {
-  display: flex; gap: 12px; background: var(--callout-bg);
-  border-radius: 6px; padding: 14px 16px; margin-bottom: 32px;
-}
-.callout-icon { font-size: 20px; line-height: 1.4; flex: 0 0 24px; text-align: center; }
-.callout-body { flex: 1; min-width: 0; }
-.callout-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.callout-title { font-weight: 600; font-size: 15px; }
-.callout-desc { color: var(--text-soft); font-size: 13.5px; margin: 4px 0 12px; }
-kbd {
-  display: inline-block; padding: 0 5px; font-size: 11px;
-  font-family: inherit; background: #fff;
-  border: 1px solid var(--divider-strong); border-radius: 3px; vertical-align: 1px;
-}
-
-.drop-zone {
-  border: 1.5px dashed var(--divider-strong); border-radius: 6px;
-  padding: 18px; text-align: center; color: var(--text-mute);
-  font-size: 13px; background: rgba(255, 255, 255, 0.6);
-  cursor: pointer; transition: 0.12s;
-}
-.drop-zone:hover { background: #fff; color: var(--text-soft); }
-.drop-zone.drag {
-  border-color: var(--accent);
-  background: rgba(35, 131, 226, 0.06); color: var(--accent);
-}
-
-.preview-wrap { margin-top: 10px; }
-.preview-wrap img {
-  max-width: 100%; max-height: 220px;
-  border-radius: 4px; border: 1px solid var(--divider);
-}
-
-.ocr-status {
-  margin-top: 10px; font-size: 13px; color: var(--text-soft);
-  padding: 8px 10px; background: rgba(255, 255, 255, 0.6); border-radius: 4px;
-}
-.ocr-status.error { color: #b04444; background: #fdecea; }
-
-.ocr-result { margin-top: 14px; }
-.ocr-result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.ocr-result-title {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
-  text-transform: uppercase; color: var(--text-mute);
-}
-.ocr-result-actions { display: flex; gap: 4px; }
-.suggestion-list { display: flex; flex-direction: column; }
-.suggestion {
-  display: grid; grid-template-columns: 1fr auto auto auto;
-  align-items: center; gap: 10px;
-  padding: 7px 8px; border-radius: 4px; transition: background 0.1s;
-}
-.suggestion:hover { background: rgba(255, 255, 255, 0.7); }
-.suggestion .sugg-text {
-  border: none; background: transparent; font-size: 14px;
-  color: var(--text); outline: none; width: 100%; padding: 2px 0;
-}
-.suggestion select.sugg-board {
-  font-size: 12px; padding: 3px 8px; border-radius: 4px;
-  border: 1px solid var(--divider); background: #fff;
-  color: var(--text-soft); cursor: pointer;
-}
-.sugg-add, .sugg-skip {
-  border: none; background: transparent; color: var(--text-soft);
-  font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px;
-}
-.sugg-add { color: var(--accent); font-weight: 500; }
-.sugg-add:hover, .sugg-skip:hover { background: var(--hover); }
 
 .db { margin-bottom: 36px; }
 .db-head {
@@ -223,7 +138,7 @@ kbd {
 .pill.prio-low    { background: var(--pill-low-bg);  color: var(--pill-low-fg); }
 .pill.placeholder {
   background: transparent; color: var(--text-mute);
-  border: 1px dashed transparent; opacity: 0; transition: opacity 0.1s;
+  opacity: 0; transition: opacity 0.1s;
 }
 .row:hover .pill.placeholder { opacity: 1; }
 
@@ -275,46 +190,6 @@ kbd {
   left: -9999px; width: 1px; height: 1px;
 }
 
-.page-title-row { display: flex; align-items: center; gap: 8px; }
-.icon-btn {
-  background: none; border: none; font-size: 18px;
-  color: var(--text-mute); cursor: pointer;
-  width: 32px; height: 32px; border-radius: 4px;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.icon-btn:hover { background: var(--hover); color: var(--text); }
-
-.modal-backdrop {
-  position: fixed; inset: 0; background: rgba(15, 15, 15, 0.4);
-  display: flex; align-items: center; justify-content: center; z-index: 200;
-}
-.modal {
-  background: #fff; border-radius: 6px;
-  box-shadow: 0 10px 40px rgba(15, 15, 15, 0.2);
-  width: min(520px, 92vw); overflow: hidden;
-}
-.modal-head {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 18px; border-bottom: 1px solid var(--divider);
-}
-.modal-head h3 { margin: 0; font-size: 15px; }
-.modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; }
-.setting-row { display: flex; flex-direction: column; gap: 6px; }
-.setting-row label { font-size: 12px; color: var(--text-soft); font-weight: 500; }
-.setting-row input, .setting-row select {
-  font-family: inherit; font-size: 14px;
-  padding: 8px 10px; border-radius: 4px;
-  border: 1px solid var(--divider-strong); outline: none; background: #fff;
-}
-.setting-row input:focus, .setting-row select:focus { border-color: var(--accent); }
-.setting-hint { font-size: 12px; color: var(--text-mute); line-height: 1.5; }
-.setting-hint a { color: var(--accent); text-decoration: none; }
-.setting-hint a:hover { text-decoration: underline; }
-.modal-foot {
-  padding: 12px 18px; border-top: 1px solid var(--divider);
-  display: flex; justify-content: flex-end; gap: 8px;
-}
-
 .popover {
   position: absolute; background: #fff;
   border: 1px solid var(--divider); border-radius: 6px;
@@ -329,14 +204,6 @@ kbd {
 .popover-item.danger:hover { background: #fdecea; color: var(--danger); }
 .popover-sep { height: 1px; background: var(--divider); margin: 4px 2px; }
 .popover-text { font-size: 13.5px; }
-
-.ghost-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 13px; padding: 4px 10px; border-radius: 4px;
-  background: transparent; border: 1px solid var(--divider);
-  color: var(--text-soft); cursor: pointer; transition: 0.1s;
-}
-.ghost-btn:hover { background: var(--hover); color: var(--text); }
 
 .text-btn {
   background: none; border: none; cursor: pointer;
@@ -360,49 +227,13 @@ kbd {
   <div class="cover">📊</div>
 
   <header class="page-header">
-    <div class="page-title-row">
-      <h1 contenteditable="true" spellcheck="false">每日任務儀表板</h1>
-      <button class="icon-btn" id="btnOpenSettings" title="設定">⚙</button>
-    </div>
+    <h1 contenteditable="true" spellcheck="false">每日任務儀表板</h1>
     <div class="page-meta">
       <span id="dateLabel"></span>
       <span class="dot-sep">·</span>
       <span id="statSummary">0 個任務</span>
     </div>
   </header>
-
-  <div class="callout" id="ocrCallout">
-    <div class="callout-icon">📸</div>
-    <div class="callout-body">
-      <div class="callout-head">
-        <div class="callout-title">截圖自動辨識</div>
-        <label class="ghost-btn">
-          上傳截圖
-          <input type="file" id="fileInput" accept="image/*" hidden />
-        </label>
-      </div>
-      <div class="callout-desc">
-        把截圖拖進來、按 <kbd>Ctrl</kbd>+<kbd>V</kbd> 貼上,或點上方按鈕。系統會辨識文字並建議分類到對應區塊。
-      </div>
-      <div id="dropZone" class="drop-zone">
-        <span class="drop-text">拖曳或貼上圖片 · 點此選擇檔案</span>
-      </div>
-      <div id="previewWrap" class="preview-wrap" hidden>
-        <img id="previewImg" alt="preview" />
-      </div>
-      <div id="ocrStatus" class="ocr-status" hidden></div>
-      <div id="ocrResult" class="ocr-result" hidden>
-        <div class="ocr-result-head">
-          <span class="ocr-result-title">辨識結果</span>
-          <div class="ocr-result-actions">
-            <button class="ghost-btn" id="btnAddAll">全部依建議加入</button>
-            <button class="ghost-btn" id="btnClearOcr">清除</button>
-          </div>
-        </div>
-        <div id="suggestionList" class="suggestion-list"></div>
-      </div>
-    </div>
-  </div>
 
   <section class="db" data-board="notes">
     <div class="db-head">
@@ -477,54 +308,12 @@ kbd {
   <div id="popover" class="popover" hidden></div>
   <input id="datePicker" type="date" class="hidden-datepicker" />
 
-  <div id="settingsBackdrop" class="modal-backdrop" hidden
-       onclick="if(event.target===this)this.hidden=true">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>設定</h3>
-        <button type="button" class="icon-btn modal-close" id="btnCloseSettings"
-                title="關閉 (Esc)" aria-label="關閉"
-                onclick="document.getElementById('settingsBackdrop').hidden=true">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="setting-row">
-          <label>截圖辨識引擎</label>
-          <select id="ocrEngine">
-            <option value="tesseract">Tesseract.js (本機,免設定,中文準確度普通)</option>
-            <option value="vision">Claude Vision (準確度最高,需 API Key)</option>
-          </select>
-        </div>
-        <div class="setting-row" id="apiKeyRow" hidden>
-          <label>Anthropic API Key</label>
-          <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" />
-          <div class="setting-hint">
-            金鑰只儲存在您本機 (localStorage)。瀏覽器直接呼叫 Anthropic API,需在
-            <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a> 取得。
-          </div>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button type="button" class="ghost-btn" id="btnSaveSettings">儲存並關閉</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <script>
-/* ============================================================
-   每日任務儀表板 — Notion 風格 (desktop bundle)
-   ============================================================ */
-
-const STORAGE_KEY  = 'dashboard.tasks.v2';
-const SETTINGS_KEY = 'dashboard.settings.v1';
+const STORAGE_KEY = 'dashboard.tasks.v2';
 const BOARDS   = ['notes', 'work', 'meetings', 'personal'];
 const STATUSES = ['todo', 'doing', 'done'];
-
-const BOARD_LABEL = {
-  notes: '📒 筆記', work: '💼 工作',
-  meetings: '🤝 會議', personal: '🌱 個人計畫',
-};
 const STATUS_LABEL = { todo: '尚未完成', doing: '進行中', done: '已完成' };
 const PRIO_LABEL   = { high: '高', medium: '中', low: '低' };
 
@@ -553,14 +342,7 @@ function loadData() {
   } catch { return emptyData(); }
 }
 function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-function loadSettings() {
-  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
-  catch { return {}; }
-}
-function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
-
 let state = loadData();
-let settings = loadSettings();
 
 function addTask(board, text, opts = {}) {
   const t = (text || '').trim();
@@ -859,315 +641,6 @@ function openDatePicker(cb, current) {
   if (typeof datePicker.showPicker === 'function') datePicker.showPicker();
   else datePicker.click();
 }
-
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const previewWrap = document.getElementById('previewWrap');
-const previewImg = document.getElementById('previewImg');
-const ocrStatus = document.getElementById('ocrStatus');
-const ocrResult = document.getElementById('ocrResult');
-const suggestionList = document.getElementById('suggestionList');
-
-dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', e => {
-  const f = e.target.files && e.target.files[0];
-  if (f) handleImageFile(f);
-});
-['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, e => {
-  e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag');
-}));
-['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => {
-  e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag');
-}));
-dropZone.addEventListener('drop', e => {
-  const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (f && f.type.startsWith('image/')) handleImageFile(f);
-});
-window.addEventListener('paste', e => {
-  if (e.target.matches('[contenteditable], input, textarea')) return;
-  const items = e.clipboardData && e.clipboardData.items;
-  if (!items) return;
-  for (const it of items) {
-    if (it.type && it.type.startsWith('image/')) {
-      const f = it.getAsFile();
-      if (f) { handleImageFile(f); break; }
-    }
-  }
-});
-document.getElementById('btnClearOcr').addEventListener('click', clearOcr);
-
-function clearOcr() {
-  previewWrap.hidden = true;
-  previewImg.removeAttribute('src');
-  ocrStatus.hidden = true;
-  ocrStatus.classList.remove('error');
-  ocrResult.hidden = true;
-  suggestionList.innerHTML = '';
-  fileInput.value = '';
-}
-async function handleImageFile(file) {
-  clearOcr();
-  previewImg.src = URL.createObjectURL(file);
-  previewWrap.hidden = false;
-  const engine = settings.ocrEngine || 'tesseract';
-  if (engine === 'vision') {
-    if (!settings.apiKey) {
-      setStatus('需先在「設定」填入 Anthropic API Key 才能使用 Claude Vision。已自動退回 Tesseract。', true);
-      await runTesseract(file);
-      return;
-    }
-    await runClaudeVision(file);
-  } else {
-    await runTesseract(file);
-  }
-}
-async function runTesseract(file) {
-  setStatus('🔍 Tesseract 辨識中,首次載入語言檔可能 10-20 秒...');
-  try {
-    const { data } = await Tesseract.recognize(file, 'chi_tra+eng', {
-      logger: m => {
-        if (m.status === 'recognizing text' && m.progress != null) {
-          setStatus(`🔍 辨識中... ${Math.round(m.progress * 100)}%`);
-        } else if (m.status) {
-          setStatus(`🔍 ${m.status}...`);
-        }
-      },
-    });
-    const lines = extractLines(data.text);
-    if (!lines.length) { setStatus('未辨識到文字,請嘗試更清晰的截圖。', true); return; }
-    const suggestions = lines.map(line => ({
-      text: stripMeta(line),
-      board: classifyLine(line),
-      priority: detectPriority(line),
-      dueDate: detectDate(line),
-    }));
-    setStatus(`✅ Tesseract 已擷取 ${suggestions.length} 條,請確認後加入。`);
-    renderSuggestions(suggestions);
-  } catch (err) {
-    console.error(err);
-    setStatus('Tesseract 失敗: ' + (err.message || err), true);
-  }
-}
-async function runClaudeVision(file) {
-  setStatus('🧠 Claude Vision 分析中...');
-  try {
-    const base64 = await fileToBase64(file);
-    const media_type = file.type || 'image/png';
-    const body = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type, data: base64 } },
-          { type: 'text', text:
-`你是一個生產力助理。請從這張截圖中擷取所有可以變成「待辦」、「會議」、「筆記」或「個人計畫」的條目。
-
-對每一條輸出 JSON 物件,放在一個 JSON 陣列中,結構為:
-{
-  "text": "簡潔描述 (不要含時間/優先度標記)",
-  "board": "notes" | "work" | "meetings" | "personal",
-  "priority": "high" | "medium" | "low" | null,
-  "dueDate": "YYYY-MM-DD" 或 null
-}
-
-分類規則:
-- meetings: 任何有時間+人/部門/主題的會議或活動
-- work: 工作相關的任務、報告、客戶、專案、deadline
-- personal: 運動、閱讀、學習、家庭、健康
-- notes: 沒有明確動作的想法、備忘、知識點
-
-日期請解析為今天 (${todayISO()}) 為基準的絕對日期。若沒有日期請給 null。
-只輸出 JSON 陣列,不要前後文字。`,
-          },
-        ],
-      }],
-    };
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': settings.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify(body),
-    });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      throw new Error(`HTTP ${resp.status}: ${txt.slice(0, 300)}`);
-    }
-    const json = await resp.json();
-    const text = (json.content && json.content[0] && json.content[0].text) || '';
-    const arr = parseJsonArray(text);
-    if (!arr.length) { setStatus('Claude 未回傳任何項目。', true); return; }
-    setStatus(`✨ Claude Vision 已擷取 ${arr.length} 條結構化結果。`);
-    renderSuggestions(arr.map(x => ({
-      text: x.text || '',
-      board: BOARDS.includes(x.board) ? x.board : 'notes',
-      priority: ['high','medium','low'].includes(x.priority) ? x.priority : null,
-      dueDate: typeof x.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.dueDate) ? x.dueDate : null,
-    })));
-  } catch (err) {
-    console.error(err);
-    setStatus('Claude Vision 失敗: ' + (err.message || err) + ' (退回 Tesseract)', true);
-    await runTesseract(file);
-  }
-}
-function parseJsonArray(text) {
-  const m = text.match(/\[[\s\S]*\]/);
-  if (!m) return [];
-  try { return JSON.parse(m[0]); } catch { return []; }
-}
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => {
-      const s = r.result;
-      const i = s.indexOf('base64,');
-      resolve(i >= 0 ? s.slice(i + 7) : s);
-    };
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-function setStatus(msg, isError=false) {
-  ocrStatus.hidden = false;
-  ocrStatus.textContent = msg;
-  ocrStatus.classList.toggle('error', !!isError);
-}
-function extractLines(text) {
-  return text.split(/\r?\n/)
-    .map(s => s.replace(/\s+/g,' ').trim())
-    .filter(s => s.length >= 2 && !/^[\W_]+$/.test(s));
-}
-function classifyLine(line) {
-  if (/會議|會\b|例會|週會|月會|站會|meeting|sync|standup|1:1|review|kickoff|簡報/i.test(line)) return 'meetings';
-  if (/\d{1,2}[:點]\d{0,2}.*(與|跟|和|with)/i.test(line)) return 'meetings';
-  if (/工作|專案|報告|客戶|公司|交付|報表|\bpr\b|bug|deploy|deadline|交件|主管|同事|kpi|okr|報價|提案/i.test(line)) return 'work';
-  if (/運動|健身|跑步|游泳|閱讀|讀書|看書|學習|家庭|家人|旅行|旅遊|理財|冥想|早睡|料理|烹飪|語言|英文|日文/i.test(line)) return 'personal';
-  return 'notes';
-}
-function detectPriority(line) {
-  if (/(p0|p1|緊急|urgent|asap|最高|超急|今天必)/i.test(line)) return 'high';
-  if (/(重要|important|p2|高|盡快)/i.test(line)) return 'high';
-  if (/(中等|p3|一般)/i.test(line)) return 'medium';
-  if (/(低|p4|有空|次要)/i.test(line)) return 'low';
-  return null;
-}
-function detectDate(line) {
-  if (/今天|today/i.test(line)) return todayISO();
-  if (/明天|tomorrow/i.test(line)) return addDaysISO(1);
-  if (/後天/.test(line)) return addDaysISO(2);
-  if (/大後天/.test(line)) return addDaysISO(3);
-  const wk = line.match(/(下週|本週|這週|下星期|本星期)([一二三四五六日天])/);
-  if (wk) {
-    const map = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0 };
-    const target = map[wk[2]];
-    const now = new Date();
-    const dow = now.getDay();
-    let diff = target - dow;
-    if (wk[1].startsWith('下')) diff += 7;
-    else if (diff <= 0) diff += 7;
-    return addDaysISO(diff);
-  }
-  const md = line.match(/(?<![0-9])(\d{1,2})[\/\-月](\d{1,2})/);
-  if (md) {
-    const now = new Date();
-    return `${now.getFullYear()}-${pad(Number(md[1]))}-${pad(Number(md[2]))}`;
-  }
-  return null;
-}
-function stripMeta(line) {
-  return line.replace(/(p[0-9]|緊急|urgent|asap|重要|important|今天|明天|後天|大後天)/gi, '')
-    .replace(/\s+/g, ' ').trim();
-}
-function renderSuggestions(suggestions) {
-  suggestionList.innerHTML = '';
-  suggestions.forEach(s => {
-    const row = document.createElement('div');
-    row.className = 'suggestion';
-    if (s.priority) row.dataset.priority = s.priority;
-    if (s.dueDate)  row.dataset.dueDate  = s.dueDate;
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'sugg-text';
-    input.value = s.text;
-    const select = document.createElement('select');
-    select.className = 'sugg-board';
-    BOARDS.forEach(b => {
-      const opt = document.createElement('option');
-      opt.value = b; opt.textContent = BOARD_LABEL[b];
-      if (b === s.board) opt.selected = true;
-      select.appendChild(opt);
-    });
-    const addBtn = document.createElement('button');
-    addBtn.className = 'sugg-add';
-    addBtn.textContent = '加入';
-    addBtn.addEventListener('click', () => {
-      addTask(select.value, input.value, { priority: s.priority, dueDate: s.dueDate });
-      row.remove();
-      if (!suggestionList.children.length) {
-        ocrResult.hidden = true;
-        setStatus('🎉 全部建議已處理完成。');
-      }
-    });
-    const skipBtn = document.createElement('button');
-    skipBtn.className = 'sugg-skip';
-    skipBtn.textContent = '略過';
-    skipBtn.addEventListener('click', () => {
-      row.remove();
-      if (!suggestionList.children.length) ocrResult.hidden = true;
-    });
-    row.append(input, select, addBtn, skipBtn);
-    suggestionList.appendChild(row);
-  });
-  ocrResult.hidden = false;
-}
-document.getElementById('btnAddAll').addEventListener('click', () => {
-  const rows = [...suggestionList.querySelectorAll('.suggestion')];
-  if (!rows.length) return;
-  rows.forEach(r => {
-    addTask(r.querySelector('select').value, r.querySelector('.sugg-text').value, {
-      priority: r.dataset.priority || null,
-      dueDate:  r.dataset.dueDate || null,
-    });
-  });
-  suggestionList.innerHTML = '';
-  ocrResult.hidden = true;
-  setStatus('🎉 已將辨識結果加入對應區塊。');
-});
-
-const backdrop = document.getElementById('settingsBackdrop');
-const ocrEngineSel = document.getElementById('ocrEngine');
-const apiKeyRow = document.getElementById('apiKeyRow');
-const apiKeyInput = document.getElementById('apiKey');
-function openSettings() {
-  ocrEngineSel.value = settings.ocrEngine || 'tesseract';
-  apiKeyInput.value = settings.apiKey || '';
-  apiKeyRow.hidden = ocrEngineSel.value !== 'vision';
-  backdrop.hidden = false;
-}
-function closeSettings() { backdrop.hidden = true; }
-document.getElementById('btnOpenSettings').addEventListener('click', openSettings);
-// Event delegation: handle close button + backdrop clicks in one place,
-// so even if a child element catches the click, closest() still finds the button.
-backdrop.addEventListener('click', e => {
-  if (e.target === backdrop) { closeSettings(); return; }
-  if (e.target.closest && e.target.closest('#btnCloseSettings')) closeSettings();
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !backdrop.hidden) { e.preventDefault(); closeSettings(); }
-});
-ocrEngineSel.addEventListener('change', () => {
-  apiKeyRow.hidden = ocrEngineSel.value !== 'vision';
-});
-document.getElementById('btnSaveSettings').addEventListener('click', () => {
-  settings.ocrEngine = ocrEngineSel.value;
-  settings.apiKey = apiKeyInput.value.trim();
-  saveSettings();
-  closeSettings();
-});
 
 document.getElementById('btnExport').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
