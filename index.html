@@ -1,1364 +1,1657 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>每日任務儀表板</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='80'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Task Dashboard — 個人待辦事項與專案規劃</title>
+<meta name="description" content="Notion 風格的每日待辦事項與專案規劃儀表板。支援看板/清單/表格/圖庫/行事曆五種視圖、專案管理、Sprint 追蹤、本週工時統計,所有資料儲存於本機瀏覽器。">
+<meta name="theme-color" content="#2383e2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✅%3C/text%3E%3C/svg%3E">
+<!-- Open Graph (for sharing on social media) -->
+<meta property="og:title" content="Daily Task Dashboard">
+<meta property="og:description" content="Notion 風格的每日待辦事項與專案規劃儀表板。支援看板/清單/表格/圖庫/行事曆五種視圖。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630' style='background:%23fff'%3E%3Ctext x='600' y='320' text-anchor='middle' font-size='200'%3E✅%3C/text%3E%3Ctext x='600' y='480' text-anchor='middle' font-size='60' fill='%2337352f' font-family='sans-serif' font-weight='700'%3EDaily Task Dashboard%3C/text%3E%3C/svg%3E">
+<meta name="twitter:card" content="summary_large_image">
 <style>
-:root {
-  --bg: #ffffff;
-  --text: #37352f;
-  --text-soft: #787774;
-  --text-mute: #9b9a97;
-  --hover: rgba(55, 53, 47, 0.06);
-  --hover-2: rgba(55, 53, 47, 0.09);
-  --divider: rgba(55, 53, 47, 0.09);
-  --divider-strong: rgba(55, 53, 47, 0.16);
+:root{
+  --bg:#ffffff; --surface:#fbfbfa; --surface-2:#f7f6f3; --surface-3:#efeeec;
+  --border:#e9e8e4; --border-2:#dcdad5;
+  --text:#37352f; --text-2:#787774; --text-3:#9b9a97;
+  --accent:#2383e2; --accent-soft:#e7f3fb;
+  --orange:#d9730d; --orange-soft:#fdecc8;
+  --red:#e03e3e; --red-soft:#fbe4e4;
+  --green:#0f7b6c; --green-soft:#ddedea;
+  --purple:#9065b0; --purple-soft:#eae4f2;
+  --yellow:#dfab01; --yellow-soft:#fbf3db;
+  --brown:#64473a; --brown-soft:#eee0da;
+  --pink:#ad1a72; --pink-soft:#f5e0e9;
+  --gray:#787774; --gray-soft:#ebeced;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06);
+  --shadow:0 4px 12px rgba(15,15,15,.08);
+  --shadow-lg:0 10px 30px rgba(15,15,15,.15);
+  --radius:8px;
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#191919; --surface:#202020; --surface-2:#252525; --surface-3:#2e2e2e;
+  --border:#2e2e2e; --border-2:#3a3a3a;
+  --text:#e0e0e0; --text-2:#9b9a97; --text-3:#787774;
+  --accent:#5b9df9; --accent-soft:#1e3a5f;
+  --orange:#e2a03f; --orange-soft:#3a2d1a;
+  --red:#f87171; --red-soft:#3a1f1f;
+  --green:#4ade80; --green-soft:#1a3a2a;
+  --purple:#a78bfa; --purple-soft:#2a1f3f;
+  --yellow:#fbbf24; --yellow-soft:#3a2f10;
+  --brown:#a87a5e; --brown-soft:#2f231a;
+  --pink:#ec4899; --pink-soft:#3a1f2c;
+  --gray:#9b9a97; --gray-soft:#2a2a2a;
+  color-scheme:dark;
+}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans TC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.55;
+  transition:background .2s,color .2s;
+}
+button,input,select,textarea{font-family:inherit;color:inherit}
 
-  /* status */
-  --pill-todo-bg:  #e3e2e0;
-  --pill-todo-fg:  #37352f;
-  --pill-doing-bg: #d3e5ef;
-  --pill-doing-fg: #1f5478;
-  --pill-done-bg:  #dbeddb;
-  --pill-done-fg:  #2b593f;
+/* Welcome */
+.welcome-overlay{position:fixed;inset:0;z-index:200;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;transition:opacity .4s,visibility .4s}
+.welcome-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.welcome-box{text-align:center;max-width:460px;padding:40px}
+.welcome-icon{font-size:3.5rem;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.welcome-box h2{font-size:1.7rem;color:var(--text);font-weight:700;margin-bottom:8px}
+.welcome-box p{color:var(--text-2);font-size:.92rem;margin-bottom:24px}
+.welcome-input{width:100%;padding:14px 18px;background:var(--surface-2);
+  border:2px solid var(--border);border-radius:10px;color:var(--text);
+  font-size:1.05rem;outline:none;text-align:center;margin-bottom:16px}
+.welcome-input:focus{border-color:var(--accent)}
+.welcome-input::placeholder{color:var(--text-3)}
+.welcome-hint{font-size:.75rem;color:var(--text-3);margin-bottom:20px}
+.welcome-btn{padding:12px 44px;background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .15s}
+.welcome-btn:hover:not(:disabled){filter:brightness(.92);transform:translateY(-1px)}
+.welcome-btn:disabled{opacity:.35;cursor:not-allowed}
 
-  /* priority */
-  --pill-high-bg:  #ffe2dd;
-  --pill-high-fg:  #a14b3a;
-  --pill-med-bg:   #fdecc8;
-  --pill-med-fg:   #7c5e10;
-  --pill-low-bg:   #d3e5ef;
-  --pill-low-fg:   #1f5478;
+/* Cover */
+.cover{width:100%;height:180px;
+  background:linear-gradient(135deg,#e9d5b8 0%,#d4b896 30%,#c9884a 60%,#8b5a2b 100%);
+  position:relative;overflow:hidden}
+[data-theme="dark"] .cover{background:linear-gradient(135deg,#2d4a3e 0%,#1a3a2a 30%,#0f2b1c 60%,#1a1a2e 100%)}
+.cover::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 50%,rgba(255,255,255,.15) 0%,transparent 60%),
+    radial-gradient(ellipse at 70% 40%,rgba(0,0,0,.1) 0%,transparent 50%)}
+.cover::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;
+  background:linear-gradient(transparent,var(--bg))}
 
-  /* difficulty (Notion 色) */
-  --pill-hard-bg:  #eee0da;
-  --pill-hard-fg:  #9f6b53;
-  --pill-mid-bg:   #dbeddb;
-  --pill-mid-fg:   #448361;
-  --pill-easy-bg:  #e8deee;
-  --pill-easy-fg:  #6940a5;
+/* Top toolbar (theme/view) */
+.top-toolbar{position:absolute;top:14px;right:18px;z-index:10;display:flex;gap:8px}
+.tb-btn{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.85);color:var(--text);cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+[data-theme="dark"] .tb-btn{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.15);color:#fff}
+.tb-btn:hover{transform:scale(1.05)}
 
-  /* urgency */
-  --pill-crit-bg:  #ffe2dd;
-  --pill-crit-fg:  #a14b3a;
-  --pill-norm-bg:  #fdecc8;
-  --pill-norm-fg:  #7c5e10;
+/* Page */
+.page{max-width:1240px;margin:-40px auto 0;padding:0 36px 80px;position:relative;z-index:1}
+.page-icon{font-size:5rem;line-height:1;margin-bottom:6px;display:block}
+.page-title{font-size:2.4rem;font-weight:700;color:var(--text);
+  margin-bottom:24px;letter-spacing:-.5px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.name-badge{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  padding:2px 10px;border-radius:6px;transition:background .15s}
+.name-badge:hover{background:var(--surface-3)}
+.name-badge .edit-icon{font-size:.7rem;opacity:0;transition:opacity .15s;color:var(--text-3)}
+.name-badge:hover .edit-icon{opacity:1}
+.subtitle{font-size:.95rem;color:var(--text-2);margin-bottom:28px;font-weight:400;
+  display:flex;align-items:center;gap:8px}
+.subtitle .dot{width:4px;height:4px;background:var(--text-3);border-radius:50%}
 
-  --accent: #2383e2;
-  --danger: #eb5757;
-  --warn:   #eb8a3a;
+/* Top Widgets */
+.widgets{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:30px}
+.widget{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px;box-shadow:var(--shadow-sm);transition:transform .15s,box-shadow .15s}
+.widget:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.widget-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.4px;
+  color:var(--text-3);margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:6px}
 
-  --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Helvetica,
-          "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-}
+.clock-widget{display:flex;align-items:center;gap:18px}
+.clock-face{width:74px;height:74px;border-radius:50%;border:2px solid var(--border-2);
+  position:relative;flex-shrink:0;background:var(--surface-2)}
+.clock-hand{position:absolute;bottom:50%;left:50%;transform-origin:bottom center;border-radius:2px}
+.clock-hand.hour{width:3px;height:20px;background:var(--text);margin-left:-1.5px}
+.clock-hand.minute{width:2px;height:28px;background:var(--text-2);margin-left:-1px}
+.clock-hand.second{width:1px;height:30px;background:var(--orange);margin-left:-.5px}
+.clock-center{position:absolute;top:50%;left:50%;width:6px;height:6px;background:var(--orange);
+  border-radius:50%;transform:translate(-50%,-50%)}
+.clock-time{font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:.5px}
+.clock-day{font-size:.78rem;color:var(--text-2);margin-top:2px}
+.clock-sprint{font-size:.7rem;color:var(--accent);margin-top:4px;font-weight:600}
 
-* { box-sizing: border-box; }
-html, body {
-  margin: 0; padding: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 15px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-button { font-family: inherit; }
-input, textarea, select { font-family: inherit; }
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat-item{text-align:center;padding:10px 6px;background:var(--surface-2);border-radius:8px;
+  cursor:pointer;transition:background .15s}
+.stat-item:hover{background:var(--surface-3)}
+.stat-num{font-size:1.5rem;font-weight:700;line-height:1.1}
+.stat-num.c-pending{color:var(--orange)}
+.stat-num.c-progress{color:var(--accent)}
+.stat-num.c-done{color:var(--green)}
+.stat-num.c-overdue{color:var(--red)}
+.stat-lbl{font-size:.68rem;color:var(--text-2);margin-top:3px}
 
-.page { max-width: 900px; margin: 0 auto; padding: 0 72px 120px; }
-@media (max-width: 900px) { .page { padding: 0 24px 100px; } }
+.water-widget{text-align:center}
+.water-count{font-size:2rem;font-weight:700;color:var(--accent);line-height:1;margin:6px 0 4px}
+.water-dots{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.water-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--accent);
+  background:transparent;transition:all .2s}
+.water-dot.filled{background:var(--accent)}
+.water-btns{display:flex;gap:6px;justify-content:center;align-items:center;margin-top:8px}
+.water-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-2);
+  background:var(--surface-2);color:var(--text);font-size:1.05rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.water-btn:hover{background:var(--surface-3)}
+.water-reset{background:none;border:none;color:var(--text-3);font-size:.7rem;
+  cursor:pointer;padding:4px 8px}
+.water-reset:hover{color:var(--text-2)}
 
-.cover { font-size: 78px; line-height: 1; padding: 60px 0 12px; user-select: none; }
+.hours-widget{text-align:center}
+.hours-row{display:flex;justify-content:space-around;align-items:baseline;margin-top:6px}
+.hours-block{flex:1}
+.hours-num{font-size:1.5rem;font-weight:700;color:var(--text)}
+.hours-num.est{color:var(--purple)}
+.hours-num.act{color:var(--green)}
+.hours-lbl{font-size:.66rem;color:var(--text-2);margin-top:2px}
+.hours-bar{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;margin-top:10px}
+.hours-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .4s}
 
-.page-header h1 {
-  font-size: 40px; font-weight: 700; letter-spacing: -0.01em;
-  margin: 2px 0 6px; outline: none; line-height: 1.2;
-}
-.page-meta {
-  color: var(--text-mute); font-size: 13px;
-  display: flex; gap: 8px; align-items: center; margin-bottom: 24px;
-}
-.dot-sep { opacity: 0.6; }
+/* Section header */
+.section-h{display:flex;align-items:center;justify-content:space-between;
+  margin:30px 0 14px;flex-wrap:wrap;gap:12px}
+.section-h .left{display:flex;align-items:center;gap:10px}
+.section-h h2{font-size:1.35rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.section-h .count{font-size:.78rem;color:var(--text-3);background:var(--surface-2);
+  padding:2px 9px;border-radius:10px;font-weight:600}
 
-/* time-range chips */
-.time-chips {
-  display: flex; gap: 6px; margin-bottom: 32px;
-  flex-wrap: wrap;
-}
-.chip {
-  font-size: 13px; padding: 5px 12px; border-radius: 999px;
-  background: var(--hover); color: var(--text-soft);
-  border: none; cursor: pointer; transition: 0.1s;
-}
-.chip:hover { background: var(--hover-2); color: var(--text); }
-.chip.active {
-  background: var(--text);
-  color: #fff;
-}
-.chip .chip-count {
-  margin-left: 4px; opacity: 0.7; font-size: 11px;
-}
+/* Toggle / Collapsible */
+.toggle-block{background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+.toggle-head{display:flex;align-items:center;gap:8px;padding:14px 18px;cursor:pointer;
+  user-select:none;background:var(--surface);transition:background .15s}
+.toggle-head:hover{background:var(--surface-2)}
+.toggle-arrow{font-size:.7rem;color:var(--text-3);transition:transform .2s;width:14px}
+.toggle-block.open .toggle-arrow{transform:rotate(90deg)}
+.toggle-title{font-weight:600;color:var(--text);font-size:.95rem;flex:1}
+.toggle-title em{font-style:normal;color:var(--orange);font-weight:700}
+.toggle-body{display:none;padding:6px 18px 18px;border-top:1px solid var(--border)}
+.toggle-block.open .toggle-body{display:block}
 
-/* ---------- Projects ---------- */
-.projects {
-  margin-bottom: 40px;
-}
-.projects-head {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-}
-.projects-head h2 {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 20px; font-weight: 600; margin: 0;
-  cursor: pointer; user-select: none; line-height: 1.3;
-}
-.projects-head h2 .emoji { font-size: 18px; }
-.projects-count { font-size: 13px; color: var(--text-mute); margin-left: 4px; }
-.projects-add-btn {
-  margin-left: auto;
-  background: none; border: 1px solid var(--divider-strong);
-  color: var(--text-soft); cursor: pointer;
-  padding: 4px 10px; border-radius: 4px; font-size: 13px;
-}
-.projects-add-btn:hover { background: var(--hover); color: var(--text); }
-.projects.collapsed .toggle-caret { transform: rotate(-90deg); }
-.projects.collapsed .projects-grid { display: none; }
+/* Project gallery */
+.proj-toolbar{display:flex;gap:8px;padding:10px 0 14px;align-items:center;flex-wrap:wrap}
+.proj-input{flex:1;min-width:200px;padding:8px 12px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;outline:none}
+.proj-input:focus{border-color:var(--accent)}
+.proj-input::placeholder{color:var(--text-3)}
+.proj-select,.proj-date{padding:7px 10px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:.82rem;outline:none;cursor:pointer}
+.proj-date::-webkit-calendar-picker-indicator{filter:invert(0)}
+[data-theme="dark"] .proj-date::-webkit-calendar-picker-indicator{filter:invert(.7)}
+.btn-primary{padding:7px 18px;background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:filter .15s}
+.btn-primary:hover{filter:brightness(.92)}
+.btn-secondary{padding:7px 14px;background:var(--surface-2);color:var(--text);
+  border:1px solid var(--border);border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer}
+.btn-secondary:hover{background:var(--surface-3)}
 
-.projects-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-.project-card {
-  background: #fff; border: 1px solid var(--divider);
-  border-radius: 6px; padding: 12px;
-  display: flex; flex-direction: column; gap: 8px;
-  cursor: pointer; transition: 0.12s;
-}
-.project-card:hover { border-color: var(--divider-strong); background: #fafaf9; }
-.project-name {
-  font-size: 14.5px; font-weight: 500;
-  outline: none; word-break: break-word;
-  cursor: text;
-}
-.project-meta {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 12px; color: var(--text-soft);
-}
-.project-due { white-space: nowrap; }
-.project-progress {
-  display: flex; align-items: center; gap: 8px;
-}
-.progress-bar {
-  flex: 1; height: 5px; background: var(--hover-2);
-  border-radius: 99px; overflow: hidden;
-}
-.progress-fill {
-  height: 100%; background: var(--pill-done-fg);
-  transition: width 0.2s;
-}
-.progress-text {
-  font-size: 11px; color: var(--text-mute); white-space: nowrap;
-}
-.project-actions {
-  opacity: 0; display: flex; gap: 4px; transition: 0.1s;
-  font-size: 12px; color: var(--text-mute);
-}
-.project-card:hover .project-actions { opacity: 1; }
-.project-act-btn {
-  background: none; border: none; cursor: pointer;
-  color: var(--text-mute); padding: 2px 6px; border-radius: 3px;
-}
-.project-act-btn:hover { background: var(--hover); color: var(--text); }
+.proj-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.proj-card{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;cursor:pointer;transition:all .15s;position:relative}
+.proj-card:hover{border-color:var(--border-2);box-shadow:var(--shadow);transform:translateY(-2px)}
+.proj-cover{height:60px;border-radius:8px;margin:-8px -8px 12px;
+  background:linear-gradient(135deg,var(--accent-soft),var(--purple-soft))}
+.proj-card.urgent .proj-cover{background:linear-gradient(135deg,var(--red-soft),var(--orange-soft))}
+.proj-card.normal .proj-cover{background:linear-gradient(135deg,var(--green-soft),var(--accent-soft))}
+.proj-name{font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:8px;word-break:break-word}
+.proj-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.proj-tag{font-size:.66rem;padding:2px 8px;border-radius:4px;font-weight:600}
+.proj-tag.urgent{background:var(--red-soft);color:var(--red)}
+.proj-tag.normal{background:var(--yellow-soft);color:var(--yellow)}
+.proj-tag.date{background:var(--gray-soft);color:var(--text-2)}
+.proj-tag.progress{background:var(--green-soft);color:var(--green)}
+.proj-progress{height:4px;background:var(--surface-3);border-radius:2px;margin-top:10px;overflow:hidden}
+.proj-progress-fill{height:100%;background:var(--green);transition:width .3s}
+.proj-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.proj-card:hover .proj-actions{opacity:1}
+.proj-act-btn{width:24px;height:24px;border:none;background:rgba(255,255,255,.7);
+  border-radius:4px;cursor:pointer;font-size:.72rem;color:var(--text-2)}
+[data-theme="dark"] .proj-act-btn{background:rgba(0,0,0,.4)}
+.proj-act-btn:hover{background:var(--surface-3);color:var(--text)}
+.proj-empty{text-align:center;padding:30px 10px;color:var(--text-3);font-size:.85rem;
+  border:1.5px dashed var(--border);border-radius:10px;cursor:pointer}
+.proj-empty:hover{background:var(--surface-2);color:var(--text-2)}
 
-.project-card.add {
-  display: flex; align-items: center; justify-content: center;
-  border-style: dashed; color: var(--text-mute); font-size: 14px;
-  background: transparent;
-}
-.project-card.add:hover { background: var(--hover); color: var(--text); }
+/* View Tabs */
+.view-tabs{display:flex;gap:2px;background:var(--surface-2);padding:4px;border-radius:10px;
+  border:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.view-tab{padding:6px 14px;background:transparent;border:none;color:var(--text-2);font-size:.82rem;
+  font-weight:500;cursor:pointer;border-radius:7px;display:flex;align-items:center;gap:5px;
+  transition:all .15s;white-space:nowrap}
+.view-tab:hover{color:var(--text)}
+.view-tab.active{background:var(--bg);color:var(--text);box-shadow:var(--shadow-sm);font-weight:600}
 
-/* ---------- Boards ---------- */
-.db { margin-bottom: 36px; }
-.db-head {
-  position: sticky; top: 0; background: var(--bg);
-  padding: 6px 0 4px; margin-bottom: 6px; z-index: 2;
-}
-.db-head h2 {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 20px; font-weight: 600; margin: 0 0 8px;
-  cursor: pointer; user-select: none; line-height: 1.3;
-}
-.toggle-caret {
-  display: inline-block; width: 14px; font-size: 11px;
-  color: var(--text-mute); transition: transform 0.15s;
-}
-.db.collapsed .toggle-caret { transform: rotate(-90deg); }
-.db.collapsed .db-body { display: none; }
-.db.collapsed .db-tabs { display: none; }
-.emoji { font-size: 18px; }
-.db-count { font-size: 13px; color: var(--text-mute); font-weight: 400; margin-left: 4px; }
+/* Quick filter pills */
+.filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.pill{padding:5px 14px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:20px;font-size:.78rem;color:var(--text-2);cursor:pointer;font-weight:500;transition:all .15s}
+.pill:hover{background:var(--surface-3)}
+.pill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.pill .num{margin-left:5px;font-size:.72rem;opacity:.7}
 
-.db-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--divider); }
-.tab {
-  background: none; border: none; font-size: 13px; color: var(--text-soft);
-  padding: 6px 10px; cursor: pointer; border-radius: 4px 4px 0 0;
-  position: relative; margin-bottom: -1px;
-  display: inline-flex; align-items: center; gap: 4px;
-}
-.tab:hover { background: var(--hover); color: var(--text); }
-.tab.active { color: var(--text); font-weight: 500; box-shadow: inset 0 -2px 0 var(--text); }
-.tab-count {
-  font-size: 11px; color: var(--text-mute);
-  background: var(--hover); padding: 1px 6px; border-radius: 999px;
-}
-.tab.active .tab-count { background: var(--hover-2); color: var(--text-soft); }
-.tab.wip-over .tab-count {
-  background: var(--pill-high-bg); color: var(--pill-high-fg); font-weight: 600;
-}
-.tab.wip-over::after {
-  content: "⚠"; font-size: 11px; margin-left: 2px; color: var(--warn);
-}
+/* Add bar */
+.add-bar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px}
+.add-bar input[type=text]{flex:1;min-width:200px;padding:9px 12px;background:transparent;
+  border:1px solid transparent;border-radius:7px;color:var(--text);font-size:.92rem;outline:none}
+.add-bar input[type=text]:focus{border-color:var(--border-2);background:var(--surface-2)}
+.add-bar input[type=text]::placeholder{color:var(--text-3)}
+.add-bar select,.add-bar input[type=date]{padding:7px 10px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:.8rem;
+  outline:none;cursor:pointer}
+.add-bar input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0)}
+[data-theme="dark"] .add-bar input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 
-.db-rows { display: flex; flex-direction: column; }
+/* Import chat */
+.import-section{margin-bottom:18px}
+.import-chat{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;padding:6px;transition:border-color .2s;position:relative}
+.import-chat:focus-within{border-color:var(--accent)}
+.import-chat.dragover{border-color:var(--orange);background:var(--orange-soft)}
+.import-attachments{display:none;gap:6px;flex-wrap:wrap;padding:6px 10px 2px}
+.import-attachments.has-items{display:flex}
+.attach-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;
+  background:var(--surface-2);border:1px solid var(--border);font-size:.72rem;
+  color:var(--text);max-width:180px}
+.attach-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attach-chip-remove{background:none;border:none;color:var(--text-3);cursor:pointer;
+  font-size:.8rem;padding:0 2px;line-height:1}
+.attach-chip-remove:hover{color:var(--red)}
+.paste-preview{display:none;padding:6px 10px 2px}
+.paste-preview.has-img{display:block}
+.paste-preview img{max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--border)}
+.paste-preview-remove{position:relative;display:inline-block}
+.paste-preview-x{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;
+  background:var(--surface-3);border:none;color:var(--text);font-size:.6rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.paste-preview-x:hover{background:var(--red);color:#fff}
+.import-input-row{display:flex;align-items:flex-end;gap:4px;padding:2px 4px}
+.import-plus-btn{width:34px;height:34px;border-radius:50%;background:var(--surface-2);
+  border:1px solid var(--border);color:var(--text-2);font-size:1.15rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
+.import-plus-btn:hover{background:var(--surface-3);color:var(--text)}
+.import-plus-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.import-textarea{flex:1;min-height:34px;max-height:140px;padding:7px 12px;background:transparent;
+  border:none;color:var(--text);font-size:.9rem;outline:none;resize:none;line-height:1.5}
+.import-textarea::placeholder{color:var(--text-3)}
+.import-send-btn{width:34px;height:34px;border-radius:50%;background:var(--accent);
+  border:none;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;transition:filter .15s}
+.import-send-btn:hover:not(:disabled){filter:brightness(.9)}
+.import-send-btn:disabled{opacity:.3;cursor:not-allowed}
+.import-hint{display:flex;align-items:center;gap:10px;padding:4px 14px 2px;flex-wrap:wrap}
+.import-hint-text{font-size:.68rem;color:var(--text-3)}
+.import-hint-badge{font-size:.6rem;padding:1px 6px;border-radius:3px;
+  background:var(--surface-2);color:var(--text-3);font-weight:600}
+.upload-status{margin-top:10px;padding:12px 14px;border-radius:10px;
+  background:var(--accent-soft);border:1px solid var(--accent);display:none}
+.upload-status.show{display:block}
+.upload-status.error{background:var(--red-soft);border-color:var(--red)}
+.upload-status-text{font-size:.85rem;color:var(--accent)}
+.upload-status.error .upload-status-text{color:var(--red)}
+.upload-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;
+  vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.row {
-  display: grid; grid-template-columns: 22px 1fr auto auto auto 28px;
-  align-items: center; gap: 8px;
-  padding: 6px 4px; border-bottom: 1px solid var(--divider);
-  transition: background 0.08s; min-height: 38px;
-}
-@media (max-width: 700px) {
-  .row { grid-template-columns: 22px 1fr auto 28px; }
-  .row .prio-cell, .row .date-cell { display: none; }
-}
-.row:hover { background: var(--hover); }
+/* === BOARD VIEW === */
+.kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:14px}
+.kanban::-webkit-scrollbar{height:8px}
+.kanban::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:4px}
+.kanban-col{min-width:280px;max-width:320px;flex:1;display:flex;flex-direction:column;
+  background:var(--surface-2);border-radius:10px;padding:10px}
+.kanban-col-header{display:flex;align-items:center;gap:8px;padding:6px 4px;margin-bottom:8px}
+.col-icon{font-size:1rem}
+.col-title{font-size:.86rem;font-weight:700;color:var(--text)}
+.col-count{font-size:.7rem;color:var(--text-3);background:var(--bg);
+  padding:1px 8px;border-radius:10px;font-weight:600}
+.col-wip{font-size:.65rem;color:var(--orange);margin-left:auto;font-weight:600}
+.col-wip.over{color:var(--red);animation:pulse 1.5s infinite}
+.kanban-cards{display:flex;flex-direction:column;gap:6px;flex:1;min-height:60px}
 
-.row .check {
-  width: 18px; height: 18px; border: 1.5px solid var(--text-mute);
-  border-radius: 4px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  margin-left: 2px; transition: 0.12s;
-}
-.row .check:hover { border-color: var(--text-soft); background: var(--hover); }
-.row.done .check { background: var(--text-soft); border-color: var(--text-soft); }
-.row.done .check::after { content: "✓"; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; }
+.kcard{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:11px 12px;transition:all .15s;cursor:default;position:relative;box-shadow:var(--shadow-sm)}
+.kcard:hover{border-color:var(--border-2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.kcard.s-overdue{border-left:3px solid var(--red)}
+.kcard.s-overdue .kcard-title{color:var(--red);font-weight:600}
+.kcard.s-completed{opacity:.55}
+.kcard.s-completed .kcard-title{text-decoration:line-through;color:var(--text-3)}
+.kcard.s-in_progress{border-left:3px solid var(--accent)}
+.kcard.s-pending{border-left:3px solid var(--orange)}
+.kcard-title{font-size:.88rem;font-weight:500;color:var(--text);margin-bottom:6px;
+  word-break:break-word;line-height:1.4}
+.kcard-check-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.kcard-checkbox{width:16px;height:16px;border:1.5px solid var(--border-2);border-radius:3px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;background:transparent}
+.kcard-checkbox:hover{border-color:var(--green)}
+.kcard-checkbox.checked{background:var(--green);border-color:var(--green)}
+.kcard-checkbox.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:800}
+.kcard-check-label{font-size:.76rem;color:var(--text-2)}
+.kcard.s-completed .kcard-check-label{color:var(--text-3)}
+.kcard-meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center}
+.kcard-tag{font-size:.65rem;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.2px}
+.kcard-tag.t-high{background:var(--red-soft);color:var(--red)}
+.kcard-tag.t-medium{background:var(--yellow-soft);color:var(--yellow)}
+.kcard-tag.t-low{background:var(--green-soft);color:var(--green)}
+.kcard-tag.t-date{background:var(--gray-soft);color:var(--text-2)}
+.kcard-tag.t-eta{background:var(--accent-soft);color:var(--accent)}
+.kcard-tag.t-done{background:var(--green-soft);color:var(--green)}
+.kcard-tag.d-hard{background:var(--brown-soft);color:var(--brown)}
+.kcard-tag.d-normal{background:var(--green-soft);color:var(--green)}
+.kcard-tag.d-easy{background:var(--purple-soft);color:var(--purple)}
+.kcard-tag.t-est{background:var(--purple-soft);color:var(--purple)}
+.kcard-tag.t-act{background:var(--green-soft);color:var(--green)}
+.kcard-tag.t-cat{background:var(--accent-soft);color:var(--accent)}
+.kcard-tag.t-proj{background:var(--pink-soft);color:var(--pink);max-width:140px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kcard-overdue-badge{display:inline-flex;align-items:center;gap:3px;font-size:.66rem;
+  font-weight:700;color:var(--red)}
+.kcard-overdue-icon{width:14px;height:14px;background:var(--red);color:#fff;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:900;
+  animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,62,62,.4)}50%{box-shadow:0 0 0 4px rgba(224,62,62,0)}}
+.kcard-status-row{display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.kcard-status-btn{display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;
+  font-size:.7rem;font-weight:600;border:none;cursor:pointer;transition:filter .12s}
+.kcard-status-btn.ks-pending{background:var(--orange-soft);color:var(--orange)}
+.kcard-status-btn.ks-in_progress{background:var(--accent-soft);color:var(--accent)}
+.kcard-status-btn.ks-completed{background:var(--green-soft);color:var(--green)}
+.kcard-status-btn.ks-overdue{background:var(--red-soft);color:var(--red)}
+.kcard-status-btn:hover{filter:brightness(.95)}
+.kcard-actions{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+.kcard:hover .kcard-actions{opacity:1}
+.kcard-act-btn{width:22px;height:22px;border:none;background:transparent;cursor:pointer;
+  border-radius:4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;
+  color:var(--text-3);transition:all .12s}
+.kcard-act-btn:hover{background:var(--surface-3);color:var(--text)}
+.kcard-act-btn.del:hover{background:var(--red-soft);color:var(--red)}
+.status-dd-wrap{position:relative}
+.status-dd{display:none;position:absolute;bottom:calc(100% + 4px);left:0;
+  background:var(--bg);border:1px solid var(--border-2);border-radius:8px;
+  box-shadow:var(--shadow-lg);z-index:60;min-width:140px;overflow:hidden}
+.status-dd.open{display:block}
+.status-dd-opt{padding:8px 12px;font-size:.78rem;cursor:pointer;display:flex;align-items:center;gap:6px;
+  font-weight:500;color:var(--text);transition:background .1s}
+.status-dd-opt:hover{background:var(--surface-2)}
+.status-dd-opt.active{background:var(--surface-3);font-weight:700}
 
-.row .title {
-  outline: none; font-size: 14.5px; word-break: break-word;
-  padding: 2px 2px; cursor: text;
-  display: flex; flex-direction: column; gap: 2px;
-}
-.row .title-text { display: inline; }
-.row .title-meta {
-  font-size: 11px; color: var(--text-mute); display: flex; gap: 8px;
-}
-.row .title-meta-item { white-space: nowrap; }
-.row.done .title-text { color: var(--text-mute); text-decoration: line-through; }
+.empty-col{text-align:center;padding:18px 10px;color:var(--text-3);font-size:.8rem}
 
-.pill {
-  display: inline-block; font-size: 12px; padding: 2px 8px;
-  border-radius: 3px; line-height: 1.5; white-space: nowrap;
-  cursor: pointer; user-select: none;
-}
-.pill.todo  { background: var(--pill-todo-bg);  color: var(--pill-todo-fg); }
-.pill.doing { background: var(--pill-doing-bg); color: var(--pill-doing-fg); }
-.pill.done  { background: var(--pill-done-bg);  color: var(--pill-done-fg); }
-.pill.prio-high   { background: var(--pill-high-bg); color: var(--pill-high-fg); }
-.pill.prio-medium { background: var(--pill-med-bg);  color: var(--pill-med-fg); }
-.pill.prio-low    { background: var(--pill-low-bg);  color: var(--pill-low-fg); }
-.pill.diff-hard   { background: var(--pill-hard-bg); color: var(--pill-hard-fg); }
-.pill.diff-medium { background: var(--pill-mid-bg);  color: var(--pill-mid-fg); }
-.pill.diff-easy   { background: var(--pill-easy-bg); color: var(--pill-easy-fg); }
-.pill.urgency-critical { background: var(--pill-crit-bg); color: var(--pill-crit-fg); }
-.pill.urgency-normal   { background: var(--pill-norm-bg); color: var(--pill-norm-fg); }
-.pill.placeholder {
-  background: transparent; color: var(--text-mute);
-  opacity: 0; transition: opacity 0.1s;
-}
-.row:hover .pill.placeholder { opacity: 1; }
+/* === LIST VIEW === */
+.list-view{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.list-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);
+  transition:background .12s;cursor:default}
+.list-row:last-child{border-bottom:none}
+.list-row:hover{background:var(--surface-2)}
+.list-check{width:18px;height:18px;border:1.5px solid var(--border-2);border-radius:4px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;background:transparent}
+.list-check:hover{border-color:var(--green)}
+.list-check.checked{background:var(--green);border-color:var(--green)}
+.list-check.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:800}
+.list-title{flex:1;font-size:.92rem;color:var(--text);min-width:160px}
+.list-row.completed .list-title{text-decoration:line-through;color:var(--text-3)}
+.list-row.overdue .list-title{color:var(--red);font-weight:600}
+.list-meta-area{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.list-actions{display:flex;gap:2px;opacity:.4;margin-left:auto}
+.list-row:hover .list-actions{opacity:1}
 
-.date-cell {
-  font-size: 12.5px; color: var(--text-soft);
-  padding: 2px 8px; border-radius: 3px; cursor: pointer;
-  white-space: nowrap; user-select: none;
-}
-.date-cell:hover { background: var(--hover-2); color: var(--text); }
-.date-cell.placeholder { color: var(--text-mute); opacity: 0; transition: opacity 0.1s; }
-.row:hover .date-cell.placeholder { opacity: 1; }
-.date-cell.overdue { color: #d44; }
-.date-cell.today { color: #2383e2; font-weight: 500; }
+/* === TABLE VIEW === */
+.table-view{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  overflow:auto;max-height:640px}
+.table-view table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:900px}
+.table-view th{position:sticky;top:0;background:var(--surface-2);text-align:left;
+  padding:9px 12px;font-weight:600;color:var(--text-2);font-size:.74rem;text-transform:uppercase;
+  letter-spacing:.5px;border-bottom:1px solid var(--border);z-index:1}
+.table-view td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.table-view tr:hover{background:var(--surface-2)}
+.table-view tr.completed td{color:var(--text-3)}
+.table-view tr.completed .tbl-title{text-decoration:line-through}
+.tbl-title{font-weight:500}
+.tbl-act-btns{display:flex;gap:2px}
 
-.row-more {
-  opacity: 0; background: none; border: none; cursor: pointer;
-  color: var(--text-mute); font-size: 16px;
-  width: 26px; height: 26px; border-radius: 4px;
-  display: flex; align-items: center; justify-content: center; transition: 0.1s;
-}
-.row:hover .row-more { opacity: 1; }
-.row-more:hover { background: var(--hover-2); color: var(--text); }
+/* === GALLERY VIEW === */
+.gallery-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.gcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative}
+.gcard:hover{border-color:var(--border-2);box-shadow:var(--shadow);transform:translateY(-2px)}
+.gcard.completed{opacity:.55}
+.gcard.completed .gcard-title{text-decoration:line-through}
+.gcard.overdue{border-left:3px solid var(--red)}
+.gcard-cover{height:50px;border-radius:6px;margin:-6px -6px 10px;
+  background:linear-gradient(135deg,var(--accent-soft),var(--purple-soft))}
+.gcard.high .gcard-cover{background:linear-gradient(135deg,var(--red-soft),var(--orange-soft))}
+.gcard.medium .gcard-cover{background:linear-gradient(135deg,var(--yellow-soft),var(--orange-soft))}
+.gcard.low .gcard-cover{background:linear-gradient(135deg,var(--green-soft),var(--accent-soft))}
+.gcard-title{font-weight:600;font-size:.92rem;color:var(--text);margin-bottom:8px;
+  word-break:break-word;line-height:1.4}
+.gcard-meta{display:flex;flex-wrap:wrap;gap:4px}
 
-.db-add {
-  display: flex; align-items: center; gap: 6px;
-  padding: 7px 4px; color: var(--text-mute);
-  border-bottom: 1px solid var(--divider); transition: background 0.08s;
-}
-.db-add:hover { background: var(--hover); }
-.add-icon {
-  display: inline-flex; width: 22px;
-  align-items: center; justify-content: center;
-  font-size: 16px; line-height: 1; margin-left: 2px;
-}
-.add-input {
-  flex: 1; border: none; background: transparent; outline: none;
-  font-size: 14px; padding: 4px 0; color: var(--text);
-}
-.add-input::placeholder { color: var(--text-mute); }
+/* === CALENDAR VIEW === */
+.cal-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.cal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.cal-header-left{display:flex;align-items:center;gap:10px}
+.cal-header-right{display:flex;align-items:center;gap:8px}
+.cal-nav-btn{width:28px;height:28px;border:1px solid var(--border-2);border-radius:6px;
+  background:transparent;color:var(--text-2);font-size:.8rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .12s}
+.cal-nav-btn:hover{background:var(--surface-3);color:var(--text)}
+.cal-week-label{font-size:.85rem;color:var(--text);font-weight:600;min-width:160px;text-align:center}
 
-.row.empty {
-  color: var(--text-mute); font-size: 13px; font-style: italic;
-  border-bottom: 1px solid var(--divider);
-  grid-template-columns: 1fr; padding: 8px 4px 8px 28px;
-}
+.cal-body{overflow-x:auto}
+.cal-body::-webkit-scrollbar{height:6px}
+.cal-body::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+.cal-grid{display:grid;grid-template-columns:54px repeat(7,1fr);min-width:700px;position:relative}
+.cal-day-header{text-align:center;padding:8px 4px;font-size:.74rem;font-weight:600;
+  color:var(--text-2);border-bottom:1px solid var(--border);border-left:1px solid var(--border);
+  background:var(--surface-2)}
+.cal-day-header.today{color:var(--orange)}
+.cal-day-header .cal-day-name{display:block}
+.cal-day-header .cal-day-date{display:block;font-size:.95rem;font-weight:700;margin-top:2px}
+.cal-day-header.today .cal-day-date{background:var(--orange);color:#fff;width:26px;height:26px;
+  border-radius:50%;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.cal-time-col{grid-column:1;border-right:1px solid var(--border);background:var(--surface-2)}
+.cal-time-label{height:48px;display:flex;align-items:flex-start;justify-content:flex-end;
+  padding:0 6px;font-size:.65rem;color:var(--text-3);font-weight:500;transform:translateY(-7px)}
+.cal-day-col{position:relative;border-left:1px solid var(--border);min-height:calc(48px * 13)}
+.cal-hour-line{position:absolute;left:0;right:0;height:1px;background:var(--border)}
+.cal-event{position:absolute;left:2px;right:2px;border-radius:4px;padding:3px 6px;
+  font-size:.68rem;line-height:1.3;overflow:hidden;cursor:pointer;border-left:3px solid;
+  transition:filter .12s;z-index:2}
+.cal-event:hover{filter:brightness(1.1);z-index:5}
+.cal-event .cal-ev-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-event .cal-ev-time{font-size:.6rem;opacity:.75;margin-top:1px}
+.cal-event.ev-blue{background:var(--accent-soft);border-left-color:var(--accent);color:var(--accent)}
+.cal-event.ev-green{background:var(--green-soft);border-left-color:var(--green);color:var(--green)}
+.cal-event.ev-orange{background:var(--orange-soft);border-left-color:var(--orange);color:var(--orange)}
+.cal-event.ev-purple{background:var(--purple-soft);border-left-color:var(--purple);color:var(--purple)}
+.cal-event.ev-red{background:var(--red-soft);border-left-color:var(--red);color:var(--red)}
+.cal-event.ev-pink{background:var(--pink-soft);border-left-color:var(--pink);color:var(--pink)}
+.cal-now-line{position:absolute;left:0;right:0;height:2px;background:var(--red);z-index:10;pointer-events:none}
+.cal-now-dot{position:absolute;left:-4px;top:-3px;width:8px;height:8px;background:var(--red);border-radius:50%}
 
-.hidden-datepicker {
-  position: absolute; opacity: 0; pointer-events: none;
-  left: -9999px; width: 1px; height: 1px;
-}
+/* Two-column layout for List view + sidebar */
+.list-and-side{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:900px){.list-and-side{grid-template-columns:1fr}}
+.side-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px;box-shadow:var(--shadow-sm)}
+.side-card h3{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:10px;
+  display:flex;align-items:center;gap:6px}
+.side-list{display:flex;flex-direction:column;gap:6px}
+.side-item{padding:8px 10px;background:var(--surface-2);border-radius:6px;
+  font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:6px}
+.side-item .si-time{font-size:.7rem;color:var(--text-3);margin-left:auto}
 
-/* popover */
-.popover {
-  position: absolute; background: #fff;
-  border: 1px solid var(--divider); border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(15, 15, 15, 0.12), 0 0 0 1px rgba(15, 15, 15, 0.04);
-  padding: 6px; min-width: 160px; z-index: 100;
-}
-.popover-item {
-  padding: 6px 8px; border-radius: 4px; cursor: pointer;
-  display: flex; align-items: center;
-}
-.popover-item:hover { background: var(--hover); }
-.popover-item.danger:hover { background: #fdecea; color: var(--danger); }
-.popover-sep { height: 1px; background: var(--divider); margin: 4px 2px; }
-.popover-text { font-size: 13.5px; }
+/* Notes section */
+.notes-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px;margin-top:30px;box-shadow:var(--shadow-sm)}
+.notes-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.notes-textarea{width:100%;min-height:140px;padding:12px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.92rem;
+  outline:none;resize:vertical;line-height:1.7}
+.notes-textarea:focus{border-color:var(--accent)}
+.notes-textarea::placeholder{color:var(--text-3)}
+.notes-status{font-size:.72rem;color:var(--text-3);margin-top:6px}
 
-.text-btn {
-  background: none; border: none; cursor: pointer;
-  color: var(--text-mute); font-size: 12px;
-  padding: 2px 4px; border-radius: 3px;
-}
-.text-btn:hover { color: var(--text); background: var(--hover); }
+/* Modals */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;
+  align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:24px 28px;
+  width:100%;max-width:440px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:1.05rem;color:var(--text);margin-bottom:14px;font-weight:700}
+.modal label{font-size:.75rem;font-weight:600;color:var(--text-2);display:block;
+  margin-bottom:4px;margin-top:12px;text-transform:uppercase;letter-spacing:.4px}
+.modal input[type=text],.modal select,.modal input[type=date],
+.modal input[type=datetime-local],.modal input[type=number],.modal textarea{
+  width:100%;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:7px;color:var(--text);font-size:.88rem;outline:none}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--accent)}
+.modal textarea{min-height:80px;resize:vertical;line-height:1.5}
+.modal input[type=date]::-webkit-calendar-picker-indicator,
+.modal input[type=datetime-local]::-webkit-calendar-picker-indicator{filter:invert(0)}
+[data-theme="dark"] .modal input[type=date]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] .modal input[type=datetime-local]::-webkit-calendar-picker-indicator{filter:invert(.7)}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+.btn-cancel{padding:8px 18px;border:1px solid var(--border-2);border-radius:7px;
+  background:transparent;color:var(--text);font-size:.85rem;cursor:pointer}
+.btn-cancel:hover{background:var(--surface-2)}
+.btn-save{padding:8px 18px;border:none;border-radius:7px;background:var(--accent);
+  color:#fff;font-size:.85rem;font-weight:600;cursor:pointer}
+.btn-save:hover{filter:brightness(.92)}
+.error-msg{color:var(--red);font-size:.78rem;margin-top:4px;display:none}
+.img-text-modal .modal{max-width:520px}
+.img-text-modal .img-preview-area{margin-bottom:14px;text-align:center}
+.img-text-modal .img-preview-area img{max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border)}
+.img-text-modal textarea{min-height:120px}
+.helper-text{font-size:.72rem;color:var(--text-3);margin-top:6px;line-height:1.4}
 
-.page-foot {
-  display: flex; align-items: center; gap: 12px;
-  margin-top: 64px; padding-top: 16px;
-  border-top: 1px solid var(--divider);
-  color: var(--text-mute); font-size: 12px;
-}
-.page-foot > span { margin-right: auto; }
+/* Undo Toast */
+.undo-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);padding:12px 20px;border-radius:10px;
+  font-size:.88rem;box-shadow:var(--shadow-lg);display:none;align-items:center;gap:12px;z-index:150;
+  animation:slideUp .3s ease}
+.undo-toast.show{display:flex}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}
+  to{transform:translateX(-50%) translateY(0);opacity:1}}
+.undo-btn{padding:4px 14px;border-radius:6px;border:none;background:var(--orange);
+  color:#fff;font-size:.82rem;font-weight:600;cursor:pointer}
+.undo-dismiss{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:1rem;padding:0 4px}
 
-/* ---------- Detail modal ---------- */
-.detail-backdrop {
-  position: fixed; inset: 0; background: rgba(15, 15, 15, 0.4);
-  display: flex; align-items: center; justify-content: center; z-index: 200;
-}
-.detail-modal {
-  background: #fff; border-radius: 6px;
-  box-shadow: 0 10px 40px rgba(15, 15, 15, 0.2);
-  width: min(640px, 92vw); max-height: 88vh;
-  overflow-y: auto;
-}
-.detail-head {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 20px 8px;
-}
-.detail-head-meta {
-  font-size: 11px; color: var(--text-mute); letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-.icon-btn {
-  background: none; border: none; font-size: 18px;
-  color: var(--text-mute); cursor: pointer;
-  width: 32px; height: 32px; border-radius: 4px;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.icon-btn:hover { background: var(--hover); color: var(--text); }
-
-.detail-title {
-  font-size: 22px; font-weight: 700;
-  padding: 0 20px 16px; outline: none; line-height: 1.3;
-  word-break: break-word;
-}
-
-.detail-grid {
-  display: grid; grid-template-columns: 90px 1fr;
-  gap: 4px 12px; padding: 4px 20px 16px;
-  font-size: 13px; align-items: center;
-}
-.detail-label { color: var(--text-mute); font-size: 12px; padding: 6px 0; }
-.detail-value { padding: 4px 0; }
-.detail-value .pill { font-size: 12.5px; }
-.detail-value input[type=number], .detail-value select {
-  width: 100%; padding: 6px 8px;
-  border: 1px solid transparent; border-radius: 4px;
-  font-size: 13.5px; background: transparent; color: var(--text);
-  outline: none;
-}
-.detail-value input[type=number]:hover, .detail-value select:hover {
-  background: var(--hover);
-}
-.detail-value input[type=number]:focus, .detail-value select:focus {
-  background: #fff; border-color: var(--divider-strong);
-}
-
-.detail-section { padding: 12px 20px; border-top: 1px solid var(--divider); }
-.detail-section-label {
-  font-size: 11px; color: var(--text-mute);
-  letter-spacing: 0.05em; text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.detail-summary {
-  width: 100%; min-height: 80px; resize: vertical;
-  border: 1px solid var(--divider); border-radius: 4px;
-  padding: 8px 10px; font-size: 14px; color: var(--text);
-  outline: none; background: var(--hover);
-  font-family: inherit; line-height: 1.5;
-}
-.detail-summary:focus { background: #fff; border-color: var(--divider-strong); }
-
-.detail-foot {
-  display: flex; justify-content: space-between; padding: 12px 20px;
-  border-top: 1px solid var(--divider);
-}
-.detail-del { color: var(--danger); }
-.detail-del:hover { background: #fdecea; }
-
-/* row tag pills under title */
-.title-tag {
-  font-size: 10.5px; padding: 1px 6px; border-radius: 3px;
-  background: var(--hover-2); color: var(--text-soft);
-  white-space: nowrap;
+/* Responsive */
+@media(max-width:768px){
+  .page{padding:0 18px 60px}
+  .page-title{font-size:1.8rem}
+  .modal{padding:20px}
+  .modal-row{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
+
+<!-- Welcome -->
+<div class="welcome-overlay" id="welcomeScreen">
+  <div class="welcome-box">
+    <div class="welcome-icon">✅</div>
+    <h2>歡迎使用 Daily Task Dashboard</h2>
+    <p>開始之前，請輸入你的名稱或暱稱<br>來建立專屬於你的待辦清單與專案規劃</p>
+    <input class="welcome-input" id="nameInput" type="text" placeholder="輸入你的名稱..."
+      onkeydown="if(event.key==='Enter')confirmName()"
+      oninput="document.getElementById('startBtn').disabled=!this.value.trim()">
+    <div class="welcome-hint">例如：HankHH、小明、Alice</div>
+    <button class="welcome-btn" id="startBtn" onclick="confirmName()" disabled>開始使用</button>
+  </div>
+</div>
+
+<div class="cover">
+  <div class="top-toolbar">
+    <button class="tb-btn" onclick="toggleTheme()" title="切換主題" id="themeBtn">🌙</button>
+    <button class="tb-btn" onclick="cleanupNow()" title="立即清理過期已完成項目">🧹</button>
+    <button class="tb-btn" onclick="exportData()" title="匯出 JSON 備份">⬇</button>
+  </div>
+</div>
+
 <div class="page">
-
-  <div class="cover">📊</div>
-
-  <header class="page-header">
-    <h1 contenteditable="true" spellcheck="false">每日任務儀表板</h1>
-    <div class="page-meta">
-      <span id="dateLabel"></span>
-      <span class="dot-sep">·</span>
-      <span id="statSummary">0 個任務</span>
-    </div>
-  </header>
-
-  <!-- Time range chips -->
-  <div class="time-chips" id="timeChips">
-    <button class="chip active" data-range="all">全部</button>
-    <button class="chip" data-range="today">今日</button>
-    <button class="chip" data-range="tomorrow">明日</button>
-    <button class="chip" data-range="week">一週內</button>
-    <button class="chip" data-range="unscheduled">未排程</button>
+  <span class="page-icon">✅</span>
+  <h1 class="page-title">
+    <span class="name-badge" onclick="editName()" title="點擊修改名稱">
+      <span id="titleName">--</span>
+      <span class="edit-icon">✏️</span>
+    </span>
+    待辦事項與專案規劃
+  </h1>
+  <div class="subtitle">
+    <span id="subtitleSprint">Sprint --</span>
+    <span class="dot"></span>
+    <span id="subtitleDate">--</span>
+    <span class="dot"></span>
+    <span>目標：今日專注 <strong id="subtitleFocus">0</strong> 件事</span>
+    <span class="dot"></span>
+    <span title="每天 00:00 後自動清除已完成的過期項目，未完成的逾期項目會保留">🧹 自動清理已啟用</span>
   </div>
 
-  <!-- Projects -->
-  <section class="projects" id="projects">
-    <div class="projects-head">
-      <h2><span class="toggle-caret">▾</span><span class="emoji">🎯</span>專案<span class="projects-count" id="projectsCount"></span></h2>
-      <button class="projects-add-btn" id="btnAddProject">＋ 新增專案</button>
-    </div>
-    <div class="projects-grid" id="projectsGrid"></div>
-  </section>
-
-  <section class="db" data-board="notes">
-    <div class="db-head">
-      <h2><span class="toggle-caret">▾</span><span class="emoji">📒</span><span class="db-title">筆記</span><span class="db-count" data-count></span></h2>
-      <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
-        <button class="tab" data-filter="todo">尚未完成<span class="tab-count"></span></button>
-        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
-        <button class="tab" data-filter="done">已完成<span class="tab-count"></span></button>
+  <!-- Top Widgets -->
+  <div class="widgets">
+    <div class="widget">
+      <div class="widget-label">🕐 時鐘</div>
+      <div class="clock-widget">
+        <div class="clock-face">
+          <div class="clock-hand hour" id="clockHour"></div>
+          <div class="clock-hand minute" id="clockMin"></div>
+          <div class="clock-hand second" id="clockSec"></div>
+          <div class="clock-center"></div>
+        </div>
+        <div>
+          <div class="clock-time" id="digitalTime">--:--</div>
+          <div class="clock-day" id="digitalDay">--</div>
+          <div class="clock-sprint" id="clockSprint">Sprint --</div>
+        </div>
       </div>
     </div>
-    <div class="db-body">
-      <div class="db-rows"></div>
-      <div class="db-add"><span class="add-icon">+</span><input type="text" class="add-input" placeholder="新增筆記" /></div>
-    </div>
-  </section>
-
-  <section class="db" data-board="work">
-    <div class="db-head">
-      <h2><span class="toggle-caret">▾</span><span class="emoji">💼</span><span class="db-title">工作</span><span class="db-count" data-count></span></h2>
-      <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
-        <button class="tab" data-filter="todo">尚未完成<span class="tab-count"></span></button>
-        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
-        <button class="tab" data-filter="done">已完成<span class="tab-count"></span></button>
+    <div class="widget">
+      <div class="widget-label">📊 任務概覽</div>
+      <div class="stats-grid">
+        <div class="stat-item" onclick="setQuickFilter('pending')"><div class="stat-num c-pending" id="sP">0</div><div class="stat-lbl">尚未完成</div></div>
+        <div class="stat-item" onclick="setQuickFilter('in_progress')"><div class="stat-num c-progress" id="sI">0</div><div class="stat-lbl">進行中</div></div>
+        <div class="stat-item" onclick="setQuickFilter('completed')"><div class="stat-num c-done" id="sD">0</div><div class="stat-lbl">已完成</div></div>
+        <div class="stat-item" onclick="setQuickFilter('overdue')"><div class="stat-num c-overdue" id="sO">0</div><div class="stat-lbl">已逾期</div></div>
       </div>
     </div>
-    <div class="db-body">
-      <div class="db-rows"></div>
-      <div class="db-add"><span class="add-icon">+</span><input type="text" class="add-input" placeholder="新增工作項目" /></div>
-    </div>
-  </section>
-
-  <section class="db" data-board="meetings">
-    <div class="db-head">
-      <h2><span class="toggle-caret">▾</span><span class="emoji">🤝</span><span class="db-title">會議</span><span class="db-count" data-count></span></h2>
-      <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
-        <button class="tab" data-filter="todo">待進行<span class="tab-count"></span></button>
-        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
-        <button class="tab" data-filter="done">已結束<span class="tab-count"></span></button>
+    <div class="widget">
+      <div class="widget-label">⏱ 本週工時</div>
+      <div class="hours-widget">
+        <div class="hours-row">
+          <div class="hours-block"><div class="hours-num est" id="hrsEst">0</div><div class="hours-lbl">估計 hr</div></div>
+          <div class="hours-block"><div class="hours-num act" id="hrsAct">0</div><div class="hours-lbl">實際 hr</div></div>
+          <div class="hours-block"><div class="hours-num" id="hrsPct">0%</div><div class="hours-lbl">完成度</div></div>
+        </div>
+        <div class="hours-bar"><div class="hours-bar-fill" id="hrsBar" style="width:0%"></div></div>
       </div>
     </div>
-    <div class="db-body">
-      <div class="db-rows"></div>
-      <div class="db-add"><span class="add-icon">+</span><input type="text" class="add-input" placeholder="新增會議 (例: 14:00 與設計團隊週會)" /></div>
-    </div>
-  </section>
-
-  <section class="db" data-board="personal">
-    <div class="db-head">
-      <h2><span class="toggle-caret">▾</span><span class="emoji">🌱</span><span class="db-title">個人計畫</span><span class="db-count" data-count></span></h2>
-      <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
-        <button class="tab" data-filter="todo">尚未完成<span class="tab-count"></span></button>
-        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
-        <button class="tab" data-filter="done">已完成<span class="tab-count"></span></button>
-      </div>
-    </div>
-    <div class="db-body">
-      <div class="db-rows"></div>
-      <div class="db-add"><span class="add-icon">+</span><input type="text" class="add-input" placeholder="新增個人計畫 (運動 / 閱讀 / 學習...)" /></div>
-    </div>
-  </section>
-
-  <footer class="page-foot">
-    <span>資料儲存於本機 (localStorage)</span>
-    <button class="text-btn" id="btnExport">匯出 JSON</button>
-    <button class="text-btn" id="btnReset">清空所有資料</button>
-  </footer>
-
-  <div id="popover" class="popover" hidden></div>
-  <input id="datePicker" type="date" class="hidden-datepicker" />
-
-  <!-- Detail modal -->
-  <div id="detailBackdrop" class="detail-backdrop" hidden
-       onclick="if(event.target===this)closeDetail()">
-    <div class="detail-modal">
-      <div class="detail-head">
-        <span class="detail-head-meta" id="detailHeadMeta"></span>
-        <button type="button" class="icon-btn" id="btnCloseDetail"
-                title="關閉 (Esc)" aria-label="關閉"
-                onclick="closeDetail()">✕</button>
-      </div>
-      <div class="detail-title" id="detailTitle" contenteditable="true" spellcheck="false"></div>
-      <div class="detail-grid">
-        <div class="detail-label">狀態</div>
-        <div class="detail-value" id="detailStatus"></div>
-        <div class="detail-label">優先度</div>
-        <div class="detail-value" id="detailPriority"></div>
-        <div class="detail-label">難易度</div>
-        <div class="detail-value" id="detailDifficulty"></div>
-        <div class="detail-label">執行時間</div>
-        <div class="detail-value" id="detailDueDate"></div>
-        <div class="detail-label">估計時間</div>
-        <div class="detail-value"><input type="number" id="detailEstimate" min="0" step="0.5" placeholder="小時 (例: 1.5)" /></div>
-        <div class="detail-label">實際時間</div>
-        <div class="detail-value"><input type="number" id="detailActual" min="0" step="0.5" placeholder="小時" /></div>
-        <div class="detail-label">關聯專案</div>
-        <div class="detail-value"><select id="detailProject"></select></div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-label">💭 總結 / 心得</div>
-        <textarea class="detail-summary" id="detailSummary" placeholder="任務做完後寫下心得或結論..."></textarea>
-      </div>
-      <div class="detail-foot">
-        <button type="button" class="text-btn detail-del" id="btnDeleteFromDetail">刪除任務</button>
-        <button type="button" class="icon-btn" style="width:auto;padding:4px 14px;border:1px solid var(--divider-strong);"
-                onclick="closeDetail()">完成</button>
+    <div class="widget">
+      <div class="widget-label">💧 喝水紀錄</div>
+      <div class="water-widget">
+        <div class="water-count" id="waterCount">0</div>
+        <div class="water-dots" id="waterDots"></div>
+        <div class="water-btns">
+          <button class="water-btn" onclick="changeWater(-1)">−</button>
+          <button class="water-btn" onclick="changeWater(1)">+</button>
+          <button class="water-reset" onclick="resetWater()">reset</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Project section (Toggle) -->
+  <div class="toggle-block open" id="projToggle">
+    <div class="toggle-head" onclick="toggleProj()">
+      <span class="toggle-arrow">▶</span>
+      <span class="toggle-title">📁 專案：有一個 <em>結果</em> 需要達成並且有一個 <em>截止日期</em></span>
+      <span class="col-count" id="projCount">0</span>
+    </div>
+    <div class="toggle-body">
+      <div class="proj-toolbar">
+        <input class="proj-input" id="projInput" type="text" placeholder="＋ 新增專案名稱..." onkeydown="if(event.key==='Enter')addProject()">
+        <select class="proj-select" id="projUrgency">
+          <option value="normal">⚡ 普通</option>
+          <option value="urgent">🔴 超重要</option>
+        </select>
+        <input class="proj-date" type="date" id="projDate" title="截止日">
+        <button class="btn-primary" onclick="addProject()">新增專案</button>
+      </div>
+      <div class="proj-gallery" id="projGallery"></div>
+    </div>
+  </div>
+
+  <!-- Tasks Section -->
+  <div class="section-h">
+    <div class="left">
+      <h2>📝 每日待辦清單 <span class="count" id="taskCount">0</span></h2>
+    </div>
+    <div class="view-tabs">
+      <button class="view-tab active" data-view="board" onclick="setView('board')">📋 看板</button>
+      <button class="view-tab" data-view="list" onclick="setView('list')">≡ 清單</button>
+      <button class="view-tab" data-view="table" onclick="setView('table')">⊞ 表格</button>
+      <button class="view-tab" data-view="gallery" onclick="setView('gallery')">🖼 圖庫</button>
+      <button class="view-tab" data-view="calendar" onclick="setView('calendar')">📅 行事曆</button>
+    </div>
+  </div>
+
+  <!-- Quick filter pills -->
+  <div class="filter-pills" id="filterPills">
+    <span class="pill active" data-f="all" onclick="setQuickFilter('all')">全部 <span class="num" id="fAll">0</span></span>
+    <span class="pill" data-f="today" onclick="setQuickFilter('today')">今日 <span class="num" id="fToday">0</span></span>
+    <span class="pill" data-f="tomorrow" onclick="setQuickFilter('tomorrow')">明日 <span class="num" id="fTomorrow">0</span></span>
+    <span class="pill" data-f="week" onclick="setQuickFilter('week')">本週 <span class="num" id="fWeek">0</span></span>
+    <span class="pill" data-f="unscheduled" onclick="setQuickFilter('unscheduled')">未排程 <span class="num" id="fUns">0</span></span>
+    <span class="pill" data-f="overdue" onclick="setQuickFilter('overdue')">已逾期 <span class="num" id="fOver">0</span></span>
+  </div>
+
+  <!-- Add bar -->
+  <div class="add-bar">
+    <input type="text" id="taskInput" placeholder="＋ 新增待辦事項..." onkeydown="if(event.key==='Enter')addTask()">
+    <select id="prioritySelect">
+      <option value="medium">⚡ 中優先</option>
+      <option value="high">🔴 高優先</option>
+      <option value="low">🟢 低優先</option>
+    </select>
+    <select id="difficultySelect">
+      <option value="">— 難易度 —</option>
+      <option value="hard">🏔 困難</option>
+      <option value="normal">🟢 普通</option>
+      <option value="easy">💜 簡單</option>
+    </select>
+    <select id="estSelect">
+      <option value="">— 估計時間 —</option>
+      <option value="0.5">0.5 hr</option>
+      <option value="1">1 hr</option>
+      <option value="2">2 hr</option>
+      <option value="3">3 hr</option>
+      <option value="4">4 hr</option>
+      <option value="8">8 hr</option>
+    </select>
+    <select id="categorySelect">
+      <option value="工作">💼 工作</option>
+      <option value="會議">📅 會議</option>
+      <option value="個人">🏠 個人</option>
+      <option value="學習">📚 學習</option>
+      <option value="其他">📌 其他</option>
+    </select>
+    <select id="projectSelect"><option value="">— 關聯專案 —</option></select>
+    <input type="date" id="dueDateInput">
+    <button class="btn-primary" onclick="addTask()">新增</button>
+  </div>
+
+  <!-- View Containers -->
+  <div id="viewContainer"></div>
+
+  <!-- Notes -->
+  <div class="notes-section">
+    <div class="notes-toolbar">
+      <h2 style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:6px;">📝 我的簡單筆記</h2>
+      <span class="notes-status" id="notesStatus">自動儲存中</span>
+    </div>
+    <textarea class="notes-textarea" id="notesArea" placeholder="在此記錄想法、會議重點、靈感..." oninput="saveNotes()"></textarea>
+  </div>
+</div>
+
+<!-- Undo Toast -->
+<div class="undo-toast" id="undoToast">
+  <span id="undoText">已匯入 3 個項目</span>
+  <button class="undo-btn">復原</button>
+  <button class="undo-dismiss" onclick="hideUndo()">✕</button>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>✏️ 編輯任務</h3>
+    <label>標題</label><input type="text" id="editTitle">
+    <div class="modal-row">
+      <div><label>優先等級</label>
+        <select id="editPriority">
+          <option value="high">🔴 高優先</option>
+          <option value="medium">⚡ 中優先</option>
+          <option value="low">🟢 低優先</option>
+        </select>
+      </div>
+      <div><label>分類</label>
+        <select id="editCategory">
+          <option value="工作">💼 工作</option><option value="會議">📅 會議</option>
+          <option value="個人">🏠 個人</option><option value="學習">📚 學習</option>
+          <option value="其他">📌 其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div><label>難易度</label>
+        <select id="editDifficulty">
+          <option value="">—</option>
+          <option value="hard">🏔 困難</option>
+          <option value="normal">🟢 普通</option>
+          <option value="easy">💜 簡單</option>
+        </select>
+      </div>
+      <div><label>關聯專案</label>
+        <select id="editProject"><option value="">— 無 —</option></select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div><label>估計時間 (hr)</label><input type="number" step="0.5" min="0" id="editEst" placeholder="例：1.5"></div>
+      <div><label>實際時間 (hr)</label><input type="number" step="0.5" min="0" id="editAct" placeholder="例：2"></div>
+    </div>
+    <label>到期日</label><input type="date" id="editDueDate">
+    <label>總結 / 筆記</label><textarea id="editSummary" placeholder="這個任務的重點或心得..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveEdit()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ETA Modal -->
+<div class="modal-overlay" id="etaModal">
+  <div class="modal">
+    <h3>🔄 預計完成時間</h3>
+    <p style="font-size:.82rem;color:var(--text-2);margin-bottom:8px;">請選擇預計完成此任務的日期與時間</p>
+    <label>預計完成時間</label>
+    <input type="datetime-local" id="etaInput">
+    <div class="error-msg" id="etaError">請填寫預計完成時間</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEtaModal()">取消</button>
+      <button class="btn-save" onclick="confirmEta()">確認</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Edit Modal -->
+<div class="modal-overlay" id="projModal">
+  <div class="modal">
+    <h3>📁 編輯專案</h3>
+    <label>專案名稱</label><input type="text" id="projEditName">
+    <div class="modal-row">
+      <div><label>急迫性</label>
+        <select id="projEditUrgency">
+          <option value="urgent">🔴 超重要</option>
+          <option value="normal">⚡ 普通</option>
+        </select>
+      </div>
+      <div><label>截止日</label><input type="date" id="projEditDate"></div>
+    </div>
+    <label>說明</label><textarea id="projEditDesc" placeholder="專案目標、結果定義..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('projModal').classList.remove('open')">取消</button>
+      <button class="btn-save" onclick="saveProject()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Name Edit Modal -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <h3>修改名稱</h3>
+    <label>你的名稱 / 暱稱</label>
+    <input type="text" id="nameEditInput" onkeydown="if(event.key==='Enter')saveName()">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('nameModal').classList.remove('open')">取消</button>
+      <button class="btn-save" onclick="saveName()">儲存</button>
+    </div>
+  </div>
 </div>
 
 <script>
-// Standalone Esc handler — closes any visible modal regardless of main script state.
-window.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.detail-backdrop:not([hidden])').forEach(function(el){ el.hidden = true; });
+/* ========================================================================
+   Daily Task Dashboard — Notion-inspired version
+   Storage keys: dtd_tasks, dtd_projects, dtd_notes, dtd_username,
+                 dtd_water, dtd_water_date, dtd_ui, dtd_theme, dtd_seed_may2026
+   Backwards compatible with previous version's dtd_tasks schema.
+======================================================================== */
+
+// Global error handler — surface any silent error
+window.addEventListener('error',function(e){
+  console.error('Global error:',e.message,'at',e.filename,':',e.lineno);
+  if(!window._errorShown){
+    window._errorShown=true;
+    setTimeout(()=>{
+      alert('頁面發生錯誤：\n'+e.message+'\n位置: '+e.filename+':'+e.lineno+'\n\n請截圖此訊息並按 F12 查看 Console。');
+    },100);
   }
 });
 
-const STORAGE_KEY = 'dashboard.tasks.v2';
-const BOARDS   = ['notes', 'work', 'meetings', 'personal'];
-const STATUS_LABEL = { todo: '尚未完成', doing: '進行中', done: '已完成' };
-const PRIO_LABEL   = { high: '高', medium: '中', low: '低' };
-const DIFF_LABEL   = { hard: '困難', medium: '普通', easy: '簡單' };
-const URGENCY_LABEL = { critical: '超重要', normal: '普通' };
-const BOARD_EMOJI = { notes: '📒', work: '💼', meetings: '🤝', personal: '🌱' };
-const BOARD_NAME  = { notes: '筆記', work: '工作', meetings: '會議', personal: '個人計畫' };
-const WIP_LIMIT = 5;
+const CATS=[{key:'工作',icon:'💼'},{key:'會議',icon:'📅'},{key:'個人',icon:'🏠'},{key:'學習',icon:'📚'},{key:'其他',icon:'📌'}];
+const ST={
+  pending:{label:'尚未完成',icon:'⏳',cls:'ks-pending',colIcon:'⏳'},
+  in_progress:{label:'進行中',icon:'🔄',cls:'ks-in_progress',colIcon:'🔄'},
+  completed:{label:'已完成',icon:'✅',cls:'ks-completed',colIcon:'✅'},
+  overdue:{label:'已逾期',icon:'❗',cls:'ks-overdue',colIcon:'❗'}
+};
+const WIP_LIMIT=5;
 
-/* ---------- data ---------- */
-function emptyData() {
-  const d = { projects: [], _ui: { collapsed: {}, filter: {}, timeRange: 'all' } };
-  BOARDS.forEach(b => { d[b] = []; d._ui.filter[b] = 'all'; });
-  return d;
+let tasks=[], projects=[], editingId=null, editingProjId=null, etaPendingId=null;
+let openDD=null, currentView='board', currentFilter='all', userName='';
+let calBaseDate=new Date();
+
+/* -------- Date helpers -------- */
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function inThisWeek(ds){if(!ds)return false;const d=new Date(ds+'T00:00:00'),now=new Date();const diff=Math.floor((d-now)/86400000);return diff>=0&&diff<=7;}
+function startOfWeek(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x;}
+function fmtDate(ds){if(!ds)return'';const d=new Date(ds.includes('T')?ds:ds+'T00:00:00');return(d.getMonth()+1)+'/'+d.getDate();}
+function fmtDT(ds){if(!ds)return'';const d=new Date(ds);return(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function getStatus(t){
+  if(t.status==='completed')return'completed';
+  if(t.status==='in_progress'){if(t.eta&&new Date(t.eta)<new Date())return'overdue';return'in_progress';}
+  if(t.dueDate&&t.dueDate<todayStr()&&t.status!=='completed')return'overdue';
+  if(t.status==='overdue')return'overdue';
+  return t.status||'pending';
 }
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyData();
-    const parsed = JSON.parse(raw);
-    if (!parsed._ui) parsed._ui = {};
-    if (!parsed._ui.collapsed) parsed._ui.collapsed = {};
-    if (!parsed._ui.filter) parsed._ui.filter = {};
-    if (!parsed._ui.timeRange) parsed._ui.timeRange = 'all';
-    if (!Array.isArray(parsed.projects)) parsed.projects = [];
-    BOARDS.forEach(b => {
-      if (!Array.isArray(parsed[b])) parsed[b] = [];
-      if (!parsed._ui.filter[b]) parsed._ui.filter[b] = 'all';
-      parsed[b].forEach(t => {
-        if (t.priority === undefined) t.priority = null;
-        if (t.dueDate === undefined) t.dueDate = null;
-        if (t.difficulty === undefined) t.difficulty = null;
-        if (t.estimateHours === undefined) t.estimateHours = null;
-        if (t.actualHours === undefined) t.actualHours = null;
-        if (t.projectId === undefined) t.projectId = null;
-        if (t.summary === undefined) t.summary = '';
-      });
+function getSprint(){
+  const start=new Date(2026,0,1);
+  const now=new Date();
+  const w=Math.floor((now-start)/(7*86400000))+1;
+  return 'W'+w;
+}
+
+/* -------- Theme -------- */
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('dtd_theme',next);
+  document.getElementById('themeBtn').textContent=next==='dark'?'☀':'🌙';
+}
+function loadTheme(){
+  const t=localStorage.getItem('dtd_theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent=t==='dark'?'☀':'🌙';
+}
+
+/* -------- Welcome / Name -------- */
+function checkWelcome(){
+  userName=localStorage.getItem('dtd_username')||'';
+  if(userName){
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    document.getElementById('titleName').textContent=userName;
+    document.title=userName+' Daily Task Dashboard';
+    init();
+  }else{
+    document.getElementById('welcomeScreen').classList.remove('hidden');
+    setTimeout(()=>document.getElementById('nameInput').focus(),300);
+  }
+}
+function confirmName(){
+  try{
+    const v=document.getElementById('nameInput').value.trim();
+    if(!v){alert('請先輸入你的名稱');return;}
+    userName=v;
+    try{localStorage.setItem('dtd_username',userName);}catch(e){console.warn('localStorage 寫入失敗 (可能是隱私模式):',e);}
+    document.getElementById('titleName').textContent=userName;
+    document.title=userName+' Daily Task Dashboard';
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    init();
+  }catch(err){
+    console.error('confirmName 錯誤:',err);
+    alert('啟動時發生錯誤：'+err.message+'\n\n請按 F12 → Console 查看詳細訊息並回報。');
+  }
+}
+function editName(){document.getElementById('nameEditInput').value=userName;document.getElementById('nameModal').classList.add('open');}
+function saveName(){
+  const v=document.getElementById('nameEditInput').value.trim();if(!v)return;
+  userName=v;localStorage.setItem('dtd_username',userName);
+  document.getElementById('titleName').textContent=userName;
+  document.title=userName+' Daily Task Dashboard';
+  document.getElementById('nameModal').classList.remove('open');
+}
+
+/* -------- Init -------- */
+function init(){
+  try{
+  // Load tasks
+  let sv=null;try{sv=localStorage.getItem('dtd_tasks');}catch(e){console.warn('localStorage 不可用',e);}
+  if(sv){try{tasks=JSON.parse(sv);}catch(e){tasks=[];}}
+  // Load projects
+  let sp=null;try{sp=localStorage.getItem('dtd_projects');}catch(e){}
+  if(sp){try{projects=JSON.parse(sp);}catch(e){projects=[];}}
+  // Default seed if first run
+  if(!tasks.length){
+    const n=Date.now();
+    tasks=[
+      {id:n,title:'查看今日郵件並回覆重要信件',priority:'high',category:'工作',dueDate:todayStr(),status:'pending',eta:'',difficulty:'normal',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
+      {id:n+1,title:'完成 Q2 季度報告',priority:'medium',category:'工作',dueDate:todayStr(),status:'pending',eta:'',difficulty:'hard',estHours:3,actHours:0,projectId:null,summary:'',createdAt:n},
+      {id:n+2,title:'部門會議',priority:'high',category:'會議',dueDate:todayStr(),status:'pending',eta:'',difficulty:'easy',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
+      {id:n+3,title:'1-on-1 與主管面談',priority:'medium',category:'會議',dueDate:'',status:'pending',eta:'',difficulty:'easy',estHours:0.5,actHours:0,projectId:null,summary:'',createdAt:n},
+      {id:n+4,title:'繳信用卡帳單',priority:'high',category:'個人',dueDate:todayStr(),status:'pending',eta:'',difficulty:'easy',estHours:0.5,actHours:0,projectId:null,summary:'',createdAt:n},
+      {id:n+5,title:'健身房運動',priority:'low',category:'個人',dueDate:'',status:'pending',eta:'',difficulty:'normal',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
+      {id:n+6,title:'閱讀 AI 技術文章',priority:'low',category:'學習',dueDate:'',status:'pending',eta:'',difficulty:'easy',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
+    ];
+  }
+  // Default project if first run
+  if(!projects.length){
+    projects=[
+      {id:Date.now()+9001,name:'Q2 業績達標',urgency:'urgent',dueDate:'',description:'達成本季 KPI、完成所有里程碑',createdAt:Date.now()},
+      {id:Date.now()+9002,name:'個人健身計畫',urgency:'normal',dueDate:'',description:'每週運動 3 次、體重維持',createdAt:Date.now()},
+    ];
+  }
+  // Migration: ensure new fields
+  tasks.forEach(t=>{
+    if(!t.status)t.status=t.completed?'completed':'pending';
+    if(t.eta===undefined)t.eta='';
+    if(t.difficulty===undefined)t.difficulty='';
+    if(t.estHours===undefined)t.estHours=0;
+    if(t.actHours===undefined)t.actHours=0;
+    if(t.projectId===undefined)t.projectId=null;
+    if(t.summary===undefined)t.summary='';
+  });
+  // UI state
+  const ui=localStorage.getItem('dtd_ui');
+  if(ui){try{const s=JSON.parse(ui);if(s.view)currentView=s.view;if(s.filter)currentFilter=s.filter;}catch(e){}}
+  // Notes
+  document.getElementById('notesArea').value=localStorage.getItem('dtd_notes')||'';
+  // Seed sample calendar (kept for parity with previous version)
+  seedCalendarMay2026();
+  // Initial render
+  // Run daily cleanup if a new day has begun since last visit
+  dailyCleanup(true);
+  // Schedule cleanup for next midnight (handles dashboards left open across midnight)
+  scheduleMidnightCleanup();
+  initWater();
+  refreshProjectSelects();
+  updateSubtitle();
+  setView(currentView,true);
+  setQuickFilter(currentFilter,true);
+  render();
+  startClock();
+  setInterval(render,60000);
+  // Click anywhere to close dropdown
+  document.addEventListener('click',()=>{if(openDD!==null){openDD=null;render();}});
+  }catch(err){
+    console.error('init 錯誤:',err);
+    alert('載入儀表板時發生錯誤：'+err.message+'\n\n請按 F12 → Console 截圖完整錯誤，並嘗試重新整理。');
+    // Try to keep at least basic UI visible
+    document.getElementById('welcomeScreen').classList.add('hidden');
+  }
+}
+
+/* -------- One-time seed (kept for compatibility) -------- */
+function seedCalendarMay2026(){
+  if(localStorage.getItem('dtd_seed_may2026'))return;
+  const n=Date.now();
+  const cal=[
+    {title:'情境照拍攝 Day1（台北市內湖區）',category:'工作',priority:'high',dueDate:'2026-05-04',eta:'2026-05-04T18:00'},
+    {title:'AIO&GDT core team meeting（立功會議室 A17）',category:'會議',priority:'high',dueDate:'2026-05-04',eta:'2026-05-04T10:00'},
+    {title:'Gaming Cz',category:'工作',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T11:00'},
+    {title:'CC BU Fulfillment Meeting - Betty Chi',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T17:00'},
+    {title:'T7/T5 Project Sync',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T17:00'},
+    {title:'Sunny & Hank teams sync',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T18:00'},
+    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T19:00'},
+    {title:'AIO & GDT cc',category:'會議',priority:'medium',dueDate:'2026-05-05',eta:'2026-05-05T10:00'},
+    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-05',eta:'2026-05-05T19:00'},
+    {title:'CC BU Concept to - Benny Liu',category:'會議',priority:'high',dueDate:'2026-05-06',eta:'2026-05-06T10:00'},
+    {title:'發送 weekly announcement 提醒',category:'工作',priority:'medium',dueDate:'2026-05-06',eta:'2026-05-06T12:00'},
+    {title:'DT/AIO fulfillment meeting',category:'會議',priority:'medium',dueDate:'2026-05-06',eta:'2026-05-06T15:00'},
+    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-06',eta:'2026-05-06T19:00'},
+    {title:'Computex 2026 會議 - Sandy4 Chen',category:'會議',priority:'high',dueDate:'2026-05-07',eta:'2026-05-07T14:00'},
+    {title:'T7/T5 Project Sync - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-07',eta:'2026-05-07T17:00'},
+    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-07',eta:'2026-05-07T19:00'},
+    {title:'CC BU and MDM sync up - Jim2 Wang',category:'會議',priority:'medium',dueDate:'2026-05-08',eta:'2026-05-08T10:00'},
+    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-08',eta:'2026-05-08T19:00'},
+  ];
+  cal.forEach((it,i)=>{
+    tasks.push({id:n+100+i,title:it.title,priority:it.priority,category:it.category,
+      dueDate:it.dueDate,status:'pending',eta:it.eta,difficulty:'',estHours:1,actHours:0,
+      projectId:null,summary:'',createdAt:n+100+i});
+  });
+  save();localStorage.setItem('dtd_seed_may2026','1');
+}
+
+function save(){
+  localStorage.setItem('dtd_tasks',JSON.stringify(tasks));
+  localStorage.setItem('dtd_projects',JSON.stringify(projects));
+  localStorage.setItem('dtd_ui',JSON.stringify({view:currentView,filter:currentFilter}));
+}
+function saveNotes(){
+  localStorage.setItem('dtd_notes',document.getElementById('notesArea').value);
+  document.getElementById('notesStatus').textContent='已自動儲存 · '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* -------- Daily auto-cleanup -------- */
+let _cleanedTasks=[];
+function dailyCleanup(silent){
+  const today=todayStr();
+  const last=localStorage.getItem('dtd_last_cleanup');
+  if(silent&&last===today)return 0; // already cleaned today (auto mode)
+  const removed=[];
+  tasks=tasks.filter(t=>{
+    if(t.status!=='completed')return true; // 未完成（含逾期）→ 保留
+    // 已完成的任務：判斷是否「過期」（完成日早於今日，或截止日早於今日）
+    let isOld=false;
+    if(t.dueDate&&t.dueDate<today)isOld=true;
+    if(!isOld&&t.completedAt){
+      const cd=new Date(t.completedAt);
+      const cs=cd.getFullYear()+'-'+String(cd.getMonth()+1).padStart(2,'0')+'-'+String(cd.getDate()).padStart(2,'0');
+      if(cs<today)isOld=true;
+    }
+    if(isOld){removed.push(t);return false;}
+    return true;
+  });
+  localStorage.setItem('dtd_last_cleanup',today);
+  if(removed.length){
+    _cleanedTasks=removed;
+    save();
+    if(!silent||removed.length>0){
+      showUndoCleanup(removed.length);
+    }
+  }
+  return removed.length;
+}
+function cleanupNow(){
+  const c=dailyCleanup(false);
+  render();
+  if(c===0)showUndo('沒有需要清理的項目（今日完成的會保留）');
+}
+function showUndoCleanup(count){
+  document.getElementById('undoText').textContent=`已自動清理 ${count} 個過期已完成項目`;
+  const t=document.getElementById('undoToast');
+  // Replace the button onclick to undoCleanup
+  const btn=t.querySelector('.undo-btn');
+  if(btn){btn.textContent='復原清理';btn.onclick=undoCleanup;}
+  t.classList.add('show');
+  clearTimeout(window._undoTimer);
+  window._undoTimer=setTimeout(hideUndo,10000);
+}
+function undoCleanup(){
+  if(!_cleanedTasks.length)return;
+  tasks=[..._cleanedTasks,...tasks];
+  _cleanedTasks=[];
+  // Reset cleanup mark so it doesn't immediately re-trigger today
+  localStorage.removeItem('dtd_last_cleanup');
+  save();render();hideUndo();
+}
+function scheduleMidnightCleanup(){
+  const now=new Date();
+  const next=new Date(now);next.setHours(24,0,30,0); // next midnight + 30s buffer
+  const ms=next-now;
+  setTimeout(()=>{
+    dailyCleanup(true);
+    render();
+    scheduleMidnightCleanup(); // schedule next day
+  },ms);
+}
+
+/* -------- Subtitle -------- */
+function updateSubtitle(){
+  const sp=getSprint();
+  document.getElementById('subtitleSprint').textContent='Sprint '+sp;
+  document.getElementById('clockSprint').textContent='Sprint '+sp;
+  const d=new Date();
+  const wk=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][d.getDay()];
+  document.getElementById('subtitleDate').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${wk}`;
+  const todayHigh=tasks.filter(t=>t.dueDate===todayStr()&&t.priority==='high'&&getStatus(t)!=='completed').length;
+  document.getElementById('subtitleFocus').textContent=todayHigh;
+}
+
+/* -------- Clock -------- */
+function startClock(){updateClock();setInterval(updateClock,1000);}
+function updateClock(){
+  const now=new Date(),h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  document.getElementById('clockHour').style.transform=`rotate(${(h%12)*30+m*0.5}deg)`;
+  document.getElementById('clockMin').style.transform=`rotate(${m*6}deg)`;
+  document.getElementById('clockSec').style.transform=`rotate(${s*6}deg)`;
+  const ampm=h>=12?'PM':'AM',h12=h%12||12;
+  document.getElementById('digitalTime').textContent=`${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+  document.getElementById('digitalDay').textContent=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
+}
+
+/* -------- Water -------- */
+let waterN=0;const WATER_GOAL=8;
+function initWater(){
+  const sv=localStorage.getItem('dtd_water'),sd=localStorage.getItem('dtd_water_date');
+  waterN=(sv&&sd===todayStr())?parseInt(sv)||0:0;renderWater();
+}
+function changeWater(d){waterN=Math.max(0,Math.min(WATER_GOAL,waterN+d));localStorage.setItem('dtd_water',waterN);localStorage.setItem('dtd_water_date',todayStr());renderWater();}
+function resetWater(){waterN=0;localStorage.setItem('dtd_water','0');renderWater();}
+function renderWater(){
+  document.getElementById('waterCount').textContent=waterN;
+  let dots='';for(let i=0;i<WATER_GOAL;i++)dots+=`<div class="water-dot ${i<waterN?'filled':''}"></div>`;
+  document.getElementById('waterDots').innerHTML=dots;
+}
+
+/* -------- Projects -------- */
+function addProject(){
+  const v=document.getElementById('projInput').value.trim();if(!v)return;
+  projects.unshift({id:Date.now(),name:v,urgency:document.getElementById('projUrgency').value,
+    dueDate:document.getElementById('projDate').value,description:'',createdAt:Date.now()});
+  document.getElementById('projInput').value='';document.getElementById('projDate').value='';
+  save();refreshProjectSelects();renderProjects();render();
+}
+function deleteProject(id,ev){
+  ev&&ev.stopPropagation();
+  if(!confirm('確定要刪除此專案？相關任務不會被刪除。'))return;
+  projects=projects.filter(p=>p.id!==id);
+  tasks.forEach(t=>{if(t.projectId===id)t.projectId=null;});
+  save();refreshProjectSelects();renderProjects();render();
+}
+function openProjEdit(id,ev){
+  ev&&ev.stopPropagation();
+  editingProjId=id;const p=projects.find(p=>p.id===id);if(!p)return;
+  document.getElementById('projEditName').value=p.name;
+  document.getElementById('projEditUrgency').value=p.urgency;
+  document.getElementById('projEditDate').value=p.dueDate||'';
+  document.getElementById('projEditDesc').value=p.description||'';
+  document.getElementById('projModal').classList.add('open');
+}
+function saveProject(){
+  const p=projects.find(p=>p.id===editingProjId);if(!p)return;
+  p.name=document.getElementById('projEditName').value.trim()||p.name;
+  p.urgency=document.getElementById('projEditUrgency').value;
+  p.dueDate=document.getElementById('projEditDate').value;
+  p.description=document.getElementById('projEditDesc').value;
+  document.getElementById('projModal').classList.remove('open');editingProjId=null;
+  save();refreshProjectSelects();renderProjects();render();
+}
+function refreshProjectSelects(){
+  const opts='<option value="">— 關聯專案 —</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  const e=document.getElementById('projectSelect');if(e)e.innerHTML=opts;
+  const ee=document.getElementById('editProject');if(ee)ee.innerHTML='<option value="">— 無 —</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+}
+function projectName(id){if(!id)return'';const p=projects.find(p=>p.id===id);return p?p.name:'';}
+function renderProjects(){
+  const g=document.getElementById('projGallery');
+  document.getElementById('projCount').textContent=projects.length;
+  if(!projects.length){
+    g.innerHTML='<div class="proj-empty" onclick="document.getElementById(\'projInput\').focus()">＋ 點此新增第一個專案</div>';return;
+  }
+  g.innerHTML=projects.map(p=>{
+    const related=tasks.filter(t=>t.projectId===p.id);
+    const done=related.filter(t=>getStatus(t)==='completed').length;
+    const pct=related.length?Math.round(done/related.length*100):0;
+    const cls=p.urgency==='urgent'?'urgent':'normal';
+    const tag=p.urgency==='urgent'?'<span class="proj-tag urgent">🔴 超重要</span>':'<span class="proj-tag normal">⚡ 普通</span>';
+    const dateTag=p.dueDate?`<span class="proj-tag date">📅 ${fmtDate(p.dueDate)}</span>`:'';
+    const progTag=related.length?`<span class="proj-tag progress">${done}/${related.length} (${pct}%)</span>`:'';
+    return `<div class="proj-card ${cls}" onclick="openProjEdit(${p.id})">
+      <div class="proj-cover"></div>
+      <div class="proj-actions">
+        <button class="proj-act-btn" onclick="openProjEdit(${p.id},event)" title="編輯">✏️</button>
+        <button class="proj-act-btn" onclick="deleteProject(${p.id},event)" title="刪除">🗑</button>
+      </div>
+      <div class="proj-name">${esc(p.name)}</div>
+      <div class="proj-meta">${tag}${dateTag}${progTag}</div>
+      <div class="proj-progress"><div class="proj-progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+function toggleProj(){document.getElementById('projToggle').classList.toggle('open');}
+
+/* -------- Tasks CRUD -------- */
+function addTask(){
+  const inp=document.getElementById('taskInput'),title=inp.value.trim();if(!title)return;
+  const projVal=document.getElementById('projectSelect').value;
+  tasks.unshift({id:Date.now(),title,
+    priority:document.getElementById('prioritySelect').value,
+    category:document.getElementById('categorySelect').value,
+    dueDate:document.getElementById('dueDateInput').value,
+    status:'pending',eta:'',
+    difficulty:document.getElementById('difficultySelect').value,
+    estHours:parseFloat(document.getElementById('estSelect').value)||0,
+    actHours:0,
+    projectId:projVal?parseInt(projVal):null,
+    summary:'',createdAt:Date.now()});
+  inp.value='';document.getElementById('dueDateInput').value='';
+  document.getElementById('prioritySelect').value='medium';
+  document.getElementById('difficultySelect').value='';
+  document.getElementById('estSelect').value='';
+  document.getElementById('projectSelect').value='';
+  save();render();
+}
+function deleteTask(id,ev){ev&&ev.stopPropagation();tasks=tasks.filter(t=>t.id!==id);save();render();}
+function toggleDD(id,ev){ev.stopPropagation();openDD=openDD===id?null:id;render();}
+function setStatus(id,st,ev){
+  if(ev)ev.stopPropagation();
+  const t=tasks.find(t=>t.id===id);if(!t)return;openDD=null;
+  if(st==='in_progress'){
+    // WIP limit check
+    const wip=tasks.filter(x=>getStatus(x)==='in_progress').length;
+    if(wip>=WIP_LIMIT&&getStatus(t)!=='in_progress'){
+      if(!confirm(`進行中任務已達 ${WIP_LIMIT} 件 (Notion 模板建議上限)，仍要新增？`)){render();return;}
+    }
+    etaPendingId=id;
+    document.getElementById('etaInput').value=t.eta||'';
+    document.getElementById('etaError').style.display='none';
+    document.getElementById('etaModal').classList.add('open');return;
+  }
+  t.status=st;
+  if(st==='completed')t.completedAt=new Date().toISOString();
+  if(st==='pending')t.eta='';
+  save();render();
+}
+function toggleCheck(id,ev){
+  ev&&ev.stopPropagation();
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  if(getStatus(t)==='completed'){t.status='pending';t.eta='';}
+  else{t.status='completed';t.completedAt=new Date().toISOString();}
+  save();render();
+}
+function confirmEta(){
+  const v=document.getElementById('etaInput').value;
+  if(!v){document.getElementById('etaError').style.display='block';return;}
+  const t=tasks.find(t=>t.id===etaPendingId);if(t){t.status='in_progress';t.eta=v;}
+  etaPendingId=null;document.getElementById('etaModal').classList.remove('open');save();render();
+}
+function closeEtaModal(){etaPendingId=null;document.getElementById('etaModal').classList.remove('open');}
+function openEdit(id,ev){
+  ev&&ev.stopPropagation();
+  editingId=id;const t=tasks.find(t=>t.id===id);if(!t)return;
+  refreshProjectSelects();
+  document.getElementById('editTitle').value=t.title;
+  document.getElementById('editPriority').value=t.priority;
+  document.getElementById('editCategory').value=t.category;
+  document.getElementById('editDifficulty').value=t.difficulty||'';
+  document.getElementById('editEst').value=t.estHours||'';
+  document.getElementById('editAct').value=t.actHours||'';
+  document.getElementById('editProject').value=t.projectId||'';
+  document.getElementById('editDueDate').value=t.dueDate||'';
+  document.getElementById('editSummary').value=t.summary||'';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal(){document.getElementById('editModal').classList.remove('open');editingId=null;}
+function saveEdit(){
+  const t=tasks.find(t=>t.id===editingId);if(!t)return;
+  t.title=document.getElementById('editTitle').value.trim()||t.title;
+  t.priority=document.getElementById('editPriority').value;
+  t.category=document.getElementById('editCategory').value;
+  t.difficulty=document.getElementById('editDifficulty').value;
+  t.estHours=parseFloat(document.getElementById('editEst').value)||0;
+  t.actHours=parseFloat(document.getElementById('editAct').value)||0;
+  const pv=document.getElementById('editProject').value;
+  t.projectId=pv?parseInt(pv):null;
+  t.dueDate=document.getElementById('editDueDate').value;
+  t.summary=document.getElementById('editSummary').value;
+  save();closeModal();render();
+}
+
+/* -------- Filter / Sort -------- */
+function setQuickFilter(f,silent){
+  currentFilter=f;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.f===f));
+  if(!silent){save();render();}
+}
+function applyQuickFilter(list){
+  switch(currentFilter){
+    case 'today':return list.filter(t=>t.dueDate===todayStr());
+    case 'tomorrow':return list.filter(t=>t.dueDate===tomorrowStr());
+    case 'week':return list.filter(t=>inThisWeek(t.dueDate));
+    case 'unscheduled':return list.filter(t=>!t.dueDate);
+    case 'overdue':return list.filter(t=>getStatus(t)==='overdue');
+    case 'pending':return list.filter(t=>getStatus(t)==='pending');
+    case 'in_progress':return list.filter(t=>getStatus(t)==='in_progress');
+    case 'completed':return list.filter(t=>getStatus(t)==='completed');
+    default:return list;
+  }
+}
+function sortList(list){
+  const po={high:0,medium:1,low:2},so={overdue:0,in_progress:1,pending:2,completed:3};
+  return [...list].sort((a,b)=>{
+    const sa=so[getStatus(a)]||2,sb=so[getStatus(b)]||2;
+    if(sa!==sb)return sa-sb;
+    return (po[a.priority]||1)-(po[b.priority]||1);
+  });
+}
+
+/* -------- Views -------- */
+function setView(v,silent){
+  currentView=v;
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
+  if(!silent){save();render();}
+}
+
+function renderBoard(list){
+  const cols=['pending','in_progress','completed','overdue'];
+  const wip=tasks.filter(t=>getStatus(t)==='in_progress').length;
+  return `<div class="kanban">${cols.map(s=>{
+    const items=sortList(list.filter(t=>getStatus(t)===s));
+    const wipBadge=s==='in_progress'?`<span class="col-wip ${wip>WIP_LIMIT?'over':''}">WIP ${wip}/${WIP_LIMIT}</span>`:'';
+    return `<div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="col-icon">${ST[s].colIcon}</span>
+        <span class="col-title">${ST[s].label}</span>
+        <span class="col-count">${items.length}</span>
+        ${wipBadge}
+      </div>
+      <div class="kanban-cards">${items.length?items.map(renderCard).join(''):'<div class="empty-col">無項目</div>'}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderCard(t){
+  const rs=getStatus(t),sm=ST[rs],isOpen=openDD===t.id;
+  const pm={high:'本日精華',medium:'2nd Priority',low:'3rd Priority'};
+  const pc={high:'t-high',medium:'t-medium',low:'t-low'};
+  const dm={hard:'🏔 困難',normal:'🟢 普通',easy:'💜 簡單'};
+  const dc={hard:'d-hard',normal:'d-normal',easy:'d-easy'};
+  let mt=`<span class="kcard-tag ${pc[t.priority]}">${pm[t.priority]}</span>`;
+  if(t.category)mt+=`<span class="kcard-tag t-cat">${(CATS.find(c=>c.key===t.category)||{}).icon||'📌'} ${t.category}</span>`;
+  if(t.difficulty)mt+=`<span class="kcard-tag ${dc[t.difficulty]}">${dm[t.difficulty]}</span>`;
+  if(t.estHours)mt+=`<span class="kcard-tag t-est">⏱ ${t.estHours}h</span>`;
+  if(t.actHours)mt+=`<span class="kcard-tag t-act">✓ ${t.actHours}h</span>`;
+  if(t.projectId)mt+=`<span class="kcard-tag t-proj" title="${esc(projectName(t.projectId))}">📁 ${esc(projectName(t.projectId))}</span>`;
+  if(t.dueDate)mt+=`<span class="kcard-tag t-date">${fmtDate(t.dueDate)}</span>`;
+  if(rs==='in_progress'&&t.eta)mt+=`<span class="kcard-tag t-eta">預計 ${fmtDT(t.eta)}</span>`;
+  if(rs==='overdue')mt+=`<span class="kcard-overdue-badge"><span class="kcard-overdue-icon">!</span> 已逾期</span>`;
+  const dd=['pending','in_progress','completed','overdue'].map(s=>`<div class="status-dd-opt ${rs===s?'active':''}" onclick="setStatus(${t.id},'${s}',event)">${ST[s].icon} ${ST[s].label}</div>`).join('');
+  return `<div class="kcard s-${rs}" onclick="openEdit(${t.id})">
+    <div class="kcard-title">${esc(t.title)}</div>
+    <div class="kcard-check-row">
+      <div class="kcard-checkbox ${rs==='completed'?'checked':''}" onclick="toggleCheck(${t.id},event)"></div>
+      <span class="kcard-check-label">${rs==='completed'?'已完成':'完成'}</span>
+    </div>
+    <div class="kcard-meta">${mt}</div>
+    <div class="kcard-status-row">
+      <div class="status-dd-wrap">
+        <button class="kcard-status-btn ${sm.cls}" onclick="toggleDD(${t.id},event)">${sm.icon} ${sm.label} ▾</button>
+        <div class="status-dd ${isOpen?'open':''}">${dd}</div>
+      </div>
+      <div class="kcard-actions">
+        <button class="kcard-act-btn" onclick="openEdit(${t.id},event)" title="編輯">✏️</button>
+        <button class="kcard-act-btn del" onclick="deleteTask(${t.id},event)" title="刪除">🗑</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderList(list){
+  const sorted=sortList(list);
+  if(!sorted.length)return '<div class="list-view"><div class="empty-col">無項目</div></div>';
+  // Side card: today's high-priority + project quick view
+  const today=tasks.filter(t=>t.dueDate===todayStr()&&getStatus(t)!=='completed');
+  const tomorrow=tasks.filter(t=>t.dueDate===tomorrowStr()&&getStatus(t)!=='completed');
+  return `<div class="list-and-side">
+    <div class="list-view">${sorted.map(t=>{
+      const rs=getStatus(t),pm={high:'🔴',medium:'⚡',low:'🟢'};
+      const meta=[];
+      if(t.category)meta.push(`<span class="kcard-tag t-cat">${t.category}</span>`);
+      if(t.difficulty)meta.push(`<span class="kcard-tag d-${t.difficulty}">${({hard:'困難',normal:'普通',easy:'簡單'})[t.difficulty]}</span>`);
+      if(t.estHours)meta.push(`<span class="kcard-tag t-est">⏱ ${t.estHours}h</span>`);
+      if(t.dueDate)meta.push(`<span class="kcard-tag t-date">${fmtDate(t.dueDate)}</span>`);
+      if(t.projectId)meta.push(`<span class="kcard-tag t-proj">📁 ${esc(projectName(t.projectId))}</span>`);
+      return `<div class="list-row ${rs}" onclick="openEdit(${t.id})">
+        <div class="list-check ${rs==='completed'?'checked':''}" onclick="toggleCheck(${t.id},event)"></div>
+        <div class="list-title">${pm[t.priority]||''} ${esc(t.title)}</div>
+        <div class="list-meta-area">${meta.join('')}</div>
+        <div class="list-actions">
+          <button class="kcard-act-btn" onclick="openEdit(${t.id},event)">✏️</button>
+          <button class="kcard-act-btn del" onclick="deleteTask(${t.id},event)">🗑</button>
+        </div>
+      </div>`;
+    }).join('')}</div>
+    <div>
+      <div class="side-card">
+        <h3>📌 今日清單 (${today.length})</h3>
+        <div class="side-list">${today.length?today.slice(0,8).map(t=>`<div class="side-item"><span>${esc(t.title)}</span>${t.eta?`<span class="si-time">${fmtDT(t.eta).split(' ')[1]}</span>`:''}</div>`).join(''):'<div style="color:var(--text-3);font-size:.82rem;padding:8px;">今日無事，恭喜！</div>'}</div>
+      </div>
+      <div class="side-card" style="margin-top:14px;">
+        <h3>📅 明日待辦 (${tomorrow.length})</h3>
+        <div class="side-list">${tomorrow.length?tomorrow.slice(0,8).map(t=>`<div class="side-item"><span>${esc(t.title)}</span></div>`).join(''):'<div style="color:var(--text-3);font-size:.82rem;padding:8px;">明日尚無安排</div>'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTable(list){
+  const sorted=sortList(list);
+  return `<div class="table-view"><table>
+    <thead><tr>
+      <th style="width:32px;"></th>
+      <th>名稱</th><th>狀態</th><th>分類</th><th>難易度</th>
+      <th>估計</th><th>實際</th><th>執行時間</th><th>專案</th><th>Sprint</th><th></th>
+    </tr></thead>
+    <tbody>${sorted.length?sorted.map(t=>{
+      const rs=getStatus(t);
+      return `<tr class="${rs==='completed'?'completed':''}">
+        <td><div class="list-check ${rs==='completed'?'checked':''}" onclick="toggleCheck(${t.id},event)"></div></td>
+        <td class="tbl-title">${esc(t.title)}</td>
+        <td><span class="kcard-status-btn ${ST[rs].cls}" style="cursor:default;">${ST[rs].icon} ${ST[rs].label}</span></td>
+        <td>${esc(t.category||'')}</td>
+        <td>${t.difficulty?({hard:'🏔 困難',normal:'🟢 普通',easy:'💜 簡單'})[t.difficulty]:'—'}</td>
+        <td>${t.estHours?t.estHours+'h':'—'}</td>
+        <td>${t.actHours?t.actHours+'h':'—'}</td>
+        <td>${t.dueDate?fmtDate(t.dueDate):'—'}</td>
+        <td>${t.projectId?esc(projectName(t.projectId)):'—'}</td>
+        <td>${getSprint()}</td>
+        <td class="tbl-act-btns">
+          <button class="kcard-act-btn" onclick="openEdit(${t.id},event)">✏️</button>
+          <button class="kcard-act-btn del" onclick="deleteTask(${t.id},event)">🗑</button>
+        </td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="11" class="empty-col">無項目</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+function renderGallery(list){
+  const sorted=sortList(list);
+  if(!sorted.length)return '<div class="empty-col" style="padding:30px;">無項目</div>';
+  return `<div class="gallery-view">${sorted.map(t=>{
+    const rs=getStatus(t);
+    const meta=[];
+    if(t.category)meta.push(`<span class="kcard-tag t-cat">${t.category}</span>`);
+    if(t.difficulty)meta.push(`<span class="kcard-tag d-${t.difficulty}">${({hard:'困難',normal:'普通',easy:'簡單'})[t.difficulty]}</span>`);
+    if(t.estHours)meta.push(`<span class="kcard-tag t-est">⏱ ${t.estHours}h</span>`);
+    if(t.dueDate)meta.push(`<span class="kcard-tag t-date">${fmtDate(t.dueDate)}</span>`);
+    if(t.projectId)meta.push(`<span class="kcard-tag t-proj">📁 ${esc(projectName(t.projectId))}</span>`);
+    return `<div class="gcard ${t.priority} ${rs}" onclick="openEdit(${t.id})">
+      <div class="gcard-cover"></div>
+      <div class="gcard-title">${esc(t.title)}</div>
+      <div class="gcard-meta">${meta.join('')}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderCalendar(){
+  const start=startOfWeek(calBaseDate);
+  const days=[];for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d);}
+  const weekLbl=`${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()} - ${days[6].getMonth()+1}/${days[6].getDate()}`;
+  document.title=userName+' Daily Task Dashboard';
+  // Events: tasks with eta in this week
+  const weekEnd=new Date(days[6]);weekEnd.setHours(23,59,59);
+  const events=tasks.filter(t=>{
+    if(!t.eta)return false;
+    const e=new Date(t.eta);return e>=start&&e<=weekEnd;
+  });
+  const today=todayStr();
+  const HOURS_START=8,HOURS_END=21,HOUR_PX=48;
+  const hourLines=[];for(let h=HOURS_START;h<=HOURS_END;h++)hourLines.push(h);
+  let html=`<div class="cal-section">
+    <div class="cal-header">
+      <div class="cal-header-left">
+        <span style="font-size:1.1rem;">📅</span>
+        <span style="font-weight:700;">週行事曆</span>
+        <span class="col-count">${events.length}</span>
+      </div>
+      <div class="cal-header-right">
+        <button class="cal-nav-btn" onclick="navWeek(-1)">◀</button>
+        <span class="cal-week-label">${weekLbl}</span>
+        <button class="cal-nav-btn" onclick="navWeek(1)">▶</button>
+        <button class="cal-nav-btn" onclick="navWeek(0)" style="font-size:.7rem;width:auto;padding:0 10px;">今天</button>
+      </div>
+    </div>
+    <div class="cal-body"><div class="cal-grid">
+      <div class="cal-day-header" style="border-left:none;"></div>`;
+  days.forEach(d=>{
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const isToday=ds===today;
+    html+=`<div class="cal-day-header ${isToday?'today':''}">
+      <span class="cal-day-name">${['日','一','二','三','四','五','六'][d.getDay()]}</span>
+      <span class="cal-day-date">${d.getDate()}</span>
+    </div>`;
+  });
+  // Time column
+  html+=`<div class="cal-time-col">${hourLines.map(h=>`<div class="cal-time-label">${h}:00</div>`).join('')}</div>`;
+  // Day columns
+  const evColors=['ev-blue','ev-green','ev-orange','ev-purple','ev-red','ev-pink'];
+  days.forEach((d,di)=>{
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const dayEv=events.filter(t=>{const e=new Date(t.eta);return e.getFullYear()===d.getFullYear()&&e.getMonth()===d.getMonth()&&e.getDate()===d.getDate();});
+    let dayHtml=`<div class="cal-day-col">${hourLines.map(h=>`<div class="cal-hour-line" style="top:${(h-HOURS_START)*HOUR_PX}px;"></div>`).join('')}`;
+    // Now indicator
+    if(ds===today){
+      const now=new Date();const minFromStart=(now.getHours()-HOURS_START)*60+now.getMinutes();
+      if(minFromStart>0&&minFromStart<(HOURS_END-HOURS_START)*60){
+        dayHtml+=`<div class="cal-now-line" style="top:${minFromStart*HOUR_PX/60}px;"><div class="cal-now-dot"></div></div>`;
+      }
+    }
+    dayEv.forEach((t,i)=>{
+      const e=new Date(t.eta);const startM=(e.getHours()-HOURS_START)*60+e.getMinutes();
+      const dur=(t.estHours||1)*60;const top=startM*HOUR_PX/60;const h=dur*HOUR_PX/60;
+      const col=evColors[(t.id||0)%evColors.length];
+      const cat=CATS.find(c=>c.key===t.category);
+      dayHtml+=`<div class="cal-event ${col}" style="top:${top}px;height:${Math.max(h,28)}px;" onclick="openEdit(${t.id})" title="${esc(t.title)}">
+        <div class="cal-ev-title">${cat?cat.icon+' ':''}${esc(t.title)}</div>
+        <div class="cal-ev-time">${String(e.getHours()).padStart(2,'0')}:${String(e.getMinutes()).padStart(2,'0')}</div>
+      </div>`;
     });
-    return parsed;
-  } catch { return emptyData(); }
-}
-function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-let state = loadData();
-
-/* ---------- CRUD: tasks ---------- */
-function addTask(board, text, opts = {}) {
-  const t = (text || '').trim();
-  if (!t) return;
-  state[board].push({
-    id: crypto.randomUUID(),
-    text: t,
-    status:        opts.status        ?? 'todo',
-    priority:      opts.priority      ?? null,
-    dueDate:       opts.dueDate       ?? null,
-    difficulty:    opts.difficulty    ?? null,
-    estimateHours: opts.estimateHours ?? null,
-    actualHours:   opts.actualHours   ?? null,
-    projectId:     opts.projectId     ?? null,
-    summary:       opts.summary       ?? '',
-    createdAt: Date.now(),
+    dayHtml+='</div>';html+=dayHtml;
   });
-  saveData();
-  renderBoard(board);
-  renderHeader();
+  html+='</div></div></div>';
+  return html;
+}
+function navWeek(d){
+  if(d===0)calBaseDate=new Date();
+  else{const x=new Date(calBaseDate);x.setDate(x.getDate()+d*7);calBaseDate=x;}
+  render();
+}
+
+/* -------- Stats / Hours -------- */
+function calcStats(){
+  const p=tasks.filter(t=>getStatus(t)==='pending').length;
+  const i=tasks.filter(t=>getStatus(t)==='in_progress').length;
+  const d=tasks.filter(t=>getStatus(t)==='completed').length;
+  const o=tasks.filter(t=>getStatus(t)==='overdue').length;
+  document.getElementById('sP').textContent=p;
+  document.getElementById('sI').textContent=i;
+  document.getElementById('sD').textContent=d;
+  document.getElementById('sO').textContent=o;
+}
+function calcHours(){
+  const now=new Date();const ws=startOfWeek(now);const we=new Date(ws);we.setDate(we.getDate()+7);
+  const inWeek=tasks.filter(t=>{
+    if(t.dueDate){const d=new Date(t.dueDate+'T00:00:00');return d>=ws&&d<we;}
+    if(t.eta){const d=new Date(t.eta);return d>=ws&&d<we;}
+    return false;
+  });
+  const est=inWeek.reduce((s,t)=>s+(parseFloat(t.estHours)||0),0);
+  const act=inWeek.reduce((s,t)=>s+(parseFloat(t.actHours)||0),0);
+  const pct=est?Math.min(100,Math.round(act/est*100)):0;
+  document.getElementById('hrsEst').textContent=est.toFixed(1);
+  document.getElementById('hrsAct').textContent=act.toFixed(1);
+  document.getElementById('hrsPct').textContent=pct+'%';
+  document.getElementById('hrsBar').style.width=pct+'%';
+}
+function calcFilterCounts(){
+  document.getElementById('fAll').textContent=tasks.length;
+  document.getElementById('fToday').textContent=tasks.filter(t=>t.dueDate===todayStr()).length;
+  document.getElementById('fTomorrow').textContent=tasks.filter(t=>t.dueDate===tomorrowStr()).length;
+  document.getElementById('fWeek').textContent=tasks.filter(t=>inThisWeek(t.dueDate)).length;
+  document.getElementById('fUns').textContent=tasks.filter(t=>!t.dueDate).length;
+  document.getElementById('fOver').textContent=tasks.filter(t=>getStatus(t)==='overdue').length;
+}
+
+/* -------- Master render -------- */
+function render(){
+  calcStats();calcHours();calcFilterCounts();updateSubtitle();
+  document.getElementById('taskCount').textContent=tasks.length;
   renderProjects();
-}
-function updateTask(board, id, patch) {
-  const list = state[board];
-  const i = list.findIndex(t => t.id === id);
-  if (i === -1) return;
-  list[i] = { ...list[i], ...patch };
-  saveData();
-  renderBoard(board);
-  renderHeader();
-  renderProjects();
-}
-function deleteTask(board, id) {
-  state[board] = state[board].filter(t => t.id !== id);
-  saveData();
-  renderBoard(board);
-  renderHeader();
-  renderProjects();
-}
-function findTask(id) {
-  for (const b of BOARDS) {
-    const t = state[b].find(x => x.id === id);
-    if (t) return { board: b, task: t };
-  }
-  return null;
+  const filtered=applyQuickFilter(tasks);
+  const c=document.getElementById('viewContainer');
+  if(currentView==='board')c.innerHTML=renderBoard(filtered);
+  else if(currentView==='list')c.innerHTML=renderList(filtered);
+  else if(currentView==='table')c.innerHTML=renderTable(filtered);
+  else if(currentView==='gallery')c.innerHTML=renderGallery(filtered);
+  else if(currentView==='calendar')c.innerHTML=renderCalendar();
 }
 
-/* ---------- CRUD: projects ---------- */
-function addProject(name) {
-  const t = (name || '').trim();
-  if (!t) return;
-  state.projects.push({
-    id: crypto.randomUUID(),
-    name: t,
-    urgency: null,
-    dueDate: null,
-    createdAt: Date.now(),
-  });
-  saveData();
-  renderProjects();
-}
-function updateProject(id, patch) {
-  const i = state.projects.findIndex(p => p.id === id);
-  if (i === -1) return;
-  state.projects[i] = { ...state.projects[i], ...patch };
-  saveData();
-  renderProjects();
-  // tasks may show project name in detail modal
-  BOARDS.forEach(renderBoard);
-}
-function deleteProject(id) {
-  if (!confirm('確定刪除此專案?關聯的任務不會被刪除,但會解除關聯。')) return;
-  state.projects = state.projects.filter(p => p.id !== id);
-  // unlink tasks
-  BOARDS.forEach(b => state[b].forEach(t => {
-    if (t.projectId === id) t.projectId = null;
-  }));
-  saveData();
-  renderProjects();
-  BOARDS.forEach(renderBoard);
-}
-function projectProgress(projectId) {
-  let total = 0, done = 0;
-  BOARDS.forEach(b => state[b].forEach(t => {
-    if (t.projectId === projectId) {
-      total++;
-      if (t.status === 'done') done++;
-    }
-  }));
-  return { total, done };
+/* -------- Export -------- */
+function exportData(){
+  const data={tasks,projects,notes:localStorage.getItem('dtd_notes')||'',exportedAt:new Date().toISOString(),user:userName};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`dtd_backup_${todayStr()}.json`;a.click();
 }
 
-/* ---------- date helpers ---------- */
-function pad(n) { return String(n).padStart(2, '0'); }
-function todayISO() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function addDaysISO(days) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+/* -------- Undo toast (kept for any future use) -------- */
+function showUndo(msg){
+  document.getElementById('undoText').textContent=msg;
+  document.getElementById('undoToast').classList.add('show');
+  clearTimeout(window._undoTimer);window._undoTimer=setTimeout(hideUndo,5000);
 }
-function formatDateLabel(iso) {
-  if (!iso) return '';
-  const t = todayISO();
-  if (iso === t) return '今天';
-  if (iso === addDaysISO(1)) return '明天';
-  if (iso === addDaysISO(-1)) return '昨天';
-  const [y, m, d] = iso.split('-');
-  const now = new Date();
-  if (Number(y) === now.getFullYear()) return `${Number(m)}/${Number(d)}`;
-  return `${y}/${Number(m)}/${Number(d)}`;
-}
-function dateState(iso) {
-  if (!iso) return '';
-  const t = todayISO();
-  if (iso < t) return 'overdue';
-  if (iso === t) return 'today';
-  return '';
-}
+function hideUndo(){document.getElementById('undoToast').classList.remove('show');}
 
-/* ---------- time-range filter ---------- */
-function passesTimeRange(task) {
-  const r = state._ui.timeRange || 'all';
-  if (r === 'all') return true;
-  const d = task.dueDate;
-  if (r === 'unscheduled') return !d;
-  if (!d) return false;
-  if (r === 'today') return d === todayISO();
-  if (r === 'tomorrow') return d === addDaysISO(1);
-  if (r === 'week') {
-    const t = todayISO();
-    const wk = addDaysISO(7);
-    return d >= t && d <= wk;
-  }
-  return true;
-}
-
-/* ---------- render ---------- */
-function renderAll() {
-  renderHeader();
-  renderTimeChips();
-  renderProjects();
-  BOARDS.forEach(renderBoard);
-  applyCollapseStates();
-}
-
-function renderHeader() {
-  const now = new Date();
-  const wk = ['週日','週一','週二','週三','週四','週五','週六'][now.getDay()];
-  document.getElementById('dateLabel').textContent =
-    `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${wk}`;
-  let total = 0, done = 0, doing = 0;
-  BOARDS.forEach(b => state[b].forEach(t => {
-    if (!passesTimeRange(t)) return;
-    total++;
-    if (t.status === 'done') done++;
-    else if (t.status === 'doing') doing++;
-  }));
-  const parts = [`${total} 個任務`];
-  if (doing) parts.push(`${doing} 進行中`);
-  if (done)  parts.push(`${done} 已完成`);
-  document.getElementById('statSummary').textContent = parts.join(' · ');
-}
-
-function renderTimeChips() {
-  const r = state._ui.timeRange || 'all';
-  document.querySelectorAll('#timeChips .chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.range === r);
-  });
-}
-
-function applyCollapseStates() {
-  document.querySelectorAll('.db').forEach(sec => {
-    const b = sec.dataset.board;
-    sec.classList.toggle('collapsed', !!state._ui.collapsed[b]);
-  });
-  document.getElementById('projects').classList.toggle('collapsed',
-    !!state._ui.collapsed['__projects__']);
-}
-
-/* projects ui */
-function renderProjects() {
-  const grid = document.getElementById('projectsGrid');
-  const count = document.getElementById('projectsCount');
-  grid.innerHTML = '';
-  count.textContent = state.projects.length ? `· ${state.projects.length}` : '';
-  state.projects.forEach(p => grid.appendChild(projectCardNode(p)));
-  // add card
-  const add = document.createElement('div');
-  add.className = 'project-card add';
-  add.textContent = '＋ 新增專案';
-  add.addEventListener('click', () => promptAddProject());
-  grid.appendChild(add);
-}
-
-function promptAddProject() {
-  const name = prompt('專案名稱:');
-  if (name) addProject(name);
-}
-
-function projectCardNode(p) {
-  const { total, done } = projectProgress(p.id);
-  const pct = total === 0 ? 0 : Math.round(done / total * 100);
-
-  const card = document.createElement('div');
-  card.className = 'project-card';
-
-  // name
-  const name = document.createElement('div');
-  name.className = 'project-name';
-  name.contentEditable = 'true';
-  name.spellcheck = false;
-  name.textContent = p.name;
-  name.addEventListener('blur', () => {
-    const v = name.textContent.trim();
-    if (!v) { deleteProject(p.id); return; }
-    if (v !== p.name) updateProject(p.id, { name: v });
-  });
-  name.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
-  });
-  name.addEventListener('click', e => e.stopPropagation());
-
-  // meta row: urgency pill + due date
-  const meta = document.createElement('div');
-  meta.className = 'project-meta';
-
-  const urgency = document.createElement('span');
-  if (p.urgency) {
-    urgency.className = 'pill urgency-' + p.urgency;
-    urgency.textContent = URGENCY_LABEL[p.urgency];
-  } else {
-    urgency.className = 'pill placeholder';
-    urgency.textContent = '＋ 急迫性';
-    urgency.style.opacity = '1';
-  }
-  urgency.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(urgency, [
-      { html: '<span class="pill urgency-critical">超重要</span>', onClick: () => updateProject(p.id, { urgency: 'critical' }) },
-      { html: '<span class="pill urgency-normal">普通</span>', onClick: () => updateProject(p.id, { urgency: 'normal' }) },
-      { sep: true },
-      { label: '清除', onClick: () => updateProject(p.id, { urgency: null }) },
-    ]);
-  });
-
-  const due = document.createElement('span');
-  due.className = 'project-due ' + (p.dueDate ? dateState(p.dueDate) : '');
-  due.style.cursor = 'pointer';
-  due.textContent = p.dueDate ? `📅 ${formatDateLabel(p.dueDate)}` : '📅 ＋日期';
-  if (!p.dueDate) due.style.color = 'var(--text-mute)';
-  due.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(due, [
-      { label: '今天',    onClick: () => updateProject(p.id, { dueDate: todayISO() }) },
-      { label: '明天',    onClick: () => updateProject(p.id, { dueDate: addDaysISO(1) }) },
-      { label: '一週後',  onClick: () => updateProject(p.id, { dueDate: addDaysISO(7) }) },
-      { label: '兩週後',  onClick: () => updateProject(p.id, { dueDate: addDaysISO(14) }) },
-      { sep: true },
-      { label: '自選日期...', onClick: () => openDatePicker(d => updateProject(p.id, { dueDate: d || null }), p.dueDate) },
-      { label: '清除', onClick: () => updateProject(p.id, { dueDate: null }), danger: true },
-    ]);
-  });
-
-  meta.append(urgency, due);
-
-  // progress
-  const progress = document.createElement('div');
-  progress.className = 'project-progress';
-  const bar = document.createElement('div');
-  bar.className = 'progress-bar';
-  const fill = document.createElement('div');
-  fill.className = 'progress-fill';
-  fill.style.width = pct + '%';
-  bar.appendChild(fill);
-  const text = document.createElement('span');
-  text.className = 'progress-text';
-  text.textContent = total === 0 ? '尚無任務' : `${done}/${total}`;
-  progress.append(bar, text);
-
-  // delete
-  const actions = document.createElement('div');
-  actions.className = 'project-actions';
-  const delBtn = document.createElement('button');
-  delBtn.className = 'project-act-btn';
-  delBtn.textContent = '刪除';
-  delBtn.addEventListener('click', e => { e.stopPropagation(); deleteProject(p.id); });
-  actions.appendChild(delBtn);
-
-  card.append(name, meta, progress, actions);
-  return card;
-}
-
-/* board ui */
-function renderBoard(board) {
-  const section = document.querySelector(`.db[data-board="${board}"]`);
-  if (!section) return;
-
-  const filter = state._ui.filter[board] || 'all';
-  const all = state[board] || [];
-  const inTimeRange = all.filter(passesTimeRange);
-
-  // tabs (with counts)
-  const counts = {
-    all:   inTimeRange.length,
-    todo:  inTimeRange.filter(t => t.status === 'todo').length,
-    doing: inTimeRange.filter(t => t.status === 'doing').length,
-    done:  inTimeRange.filter(t => t.status === 'done').length,
-  };
-  section.querySelectorAll('.tab').forEach(t => {
-    const f = t.dataset.filter;
-    t.classList.toggle('active', f === filter);
-    t.classList.toggle('wip-over', f === 'doing' && counts.doing > WIP_LIMIT);
-    t.querySelector('.tab-count').textContent = counts[f];
-  });
-
-  section.querySelector('[data-count]').textContent = all.length ? `· ${all.length}` : '';
-
-  const container = section.querySelector('.db-rows');
-  container.innerHTML = '';
-
-  const filtered = filter === 'all' ? inTimeRange : inTimeRange.filter(t => t.status === filter);
-  if (filtered.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'row empty';
-    if (state._ui.timeRange !== 'all') empty.textContent = '此時間範圍內沒有符合條件的項目。';
-    else if (filter === 'all') empty.textContent = '尚無項目,在下方新增第一筆。';
-    else empty.textContent = '此分頁目前沒有項目。';
-    container.appendChild(empty);
-  } else {
-    filtered.forEach(t => container.appendChild(rowNode(board, t)));
-  }
-}
-
-function rowNode(board, task) {
-  const row = document.createElement('div');
-  row.className = 'row' + (task.status === 'done' ? ' done' : '');
-  row.dataset.id = task.id;
-
-  // check
-  const check = document.createElement('div');
-  check.className = 'check';
-  check.title = '切換 完成 / 尚未完成';
-  check.addEventListener('click', e => {
-    e.stopPropagation();
-    const next = task.status === 'done' ? 'todo' : 'done';
-    updateTask(board, task.id, { status: next });
-  });
-
-  // title (with sub-meta)
-  const titleWrap = document.createElement('div');
-  titleWrap.className = 'title';
-  const titleText = document.createElement('div');
-  titleText.className = 'title-text';
-  titleText.contentEditable = 'true';
-  titleText.spellcheck = false;
-  titleText.textContent = task.text;
-  titleText.addEventListener('click', e => e.stopPropagation());
-  titleText.addEventListener('blur', () => {
-    const v = titleText.textContent.trim();
-    if (!v) { deleteTask(board, task.id); return; }
-    if (v !== task.text) updateTask(board, task.id, { text: v });
-  });
-  titleText.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); titleText.blur(); }
-    if (e.key === 'Escape') { titleText.textContent = task.text; titleText.blur(); }
-  });
-  titleWrap.appendChild(titleText);
-
-  // sub-meta: difficulty + estimate + project name
-  const metaItems = [];
-  if (task.difficulty) metaItems.push(`<span class="title-tag">${DIFF_LABEL[task.difficulty]}</span>`);
-  if (task.estimateHours != null) metaItems.push(`<span class="title-tag">⏱ ${task.estimateHours}h</span>`);
-  if (task.projectId) {
-    const proj = state.projects.find(p => p.id === task.projectId);
-    if (proj) metaItems.push(`<span class="title-tag">🎯 ${escapeHtml(proj.name)}</span>`);
-  }
-  if (metaItems.length) {
-    const sub = document.createElement('div');
-    sub.className = 'title-meta';
-    sub.innerHTML = metaItems.join('');
-    titleWrap.appendChild(sub);
-  }
-
-  // priority pill
-  const prioCell = document.createElement('div');
-  prioCell.className = 'prio-cell';
-  const prio = document.createElement('span');
-  if (task.priority) {
-    prio.className = 'pill prio-' + task.priority;
-    prio.textContent = PRIO_LABEL[task.priority];
-  } else {
-    prio.className = 'pill placeholder';
-    prio.textContent = '＋ 優先度';
-  }
-  prio.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(prio, [
-      { html: '<span class="pill prio-high">高</span>',   onClick: () => updateTask(board, task.id, { priority: 'high' }) },
-      { html: '<span class="pill prio-medium">中</span>', onClick: () => updateTask(board, task.id, { priority: 'medium' }) },
-      { html: '<span class="pill prio-low">低</span>',    onClick: () => updateTask(board, task.id, { priority: 'low' }) },
-      { sep: true },
-      { label: '清除',  onClick: () => updateTask(board, task.id, { priority: null }) },
-    ]);
-  });
-  prioCell.appendChild(prio);
-
-  // date cell
-  const dateCell = document.createElement('div');
-  if (task.dueDate) {
-    dateCell.className = 'date-cell ' + dateState(task.dueDate);
-    dateCell.textContent = formatDateLabel(task.dueDate);
-  } else {
-    dateCell.className = 'date-cell placeholder';
-    dateCell.textContent = '＋ 日期';
-  }
-  dateCell.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(dateCell, [
-      { label: '今天',    onClick: () => updateTask(board, task.id, { dueDate: todayISO() }) },
-      { label: '明天',    onClick: () => updateTask(board, task.id, { dueDate: addDaysISO(1) }) },
-      { label: '後天',    onClick: () => updateTask(board, task.id, { dueDate: addDaysISO(2) }) },
-      { label: '一週後',  onClick: () => updateTask(board, task.id, { dueDate: addDaysISO(7) }) },
-      { sep: true },
-      { label: '自選日期...', onClick: () => openDatePicker(d => updateTask(board, task.id, { dueDate: d || null }), task.dueDate) },
-      { label: '清除', onClick: () => updateTask(board, task.id, { dueDate: null }), danger: true },
-    ]);
-  });
-
-  // status pill
-  const statusCell = document.createElement('div');
-  statusCell.className = 'status-cell';
-  const pill = document.createElement('span');
-  pill.className = 'pill ' + task.status;
-  pill.textContent = STATUS_LABEL[task.status];
-  pill.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(pill, [
-      { html: '<span class="pill todo">尚未完成</span>',  onClick: () => updateTask(board, task.id, { status: 'todo' }) },
-      { html: '<span class="pill doing">進行中</span>',   onClick: () => updateTask(board, task.id, { status: 'doing' }) },
-      { html: '<span class="pill done">已完成</span>',    onClick: () => updateTask(board, task.id, { status: 'done' }) },
-      { sep: true },
-      { label: '編輯詳情...', onClick: () => openDetail(board, task.id) },
-      { label: '刪除', danger: true, onClick: () => deleteTask(board, task.id) },
-    ]);
-  });
-  statusCell.appendChild(pill);
-
-  // more menu
-  const more = document.createElement('button');
-  more.className = 'row-more';
-  more.title = '編輯詳情';
-  more.textContent = '⋯';
-  more.addEventListener('click', e => {
-    e.stopPropagation();
-    openDetail(board, task.id);
-  });
-
-  row.append(check, titleWrap, prioCell, dateCell, statusCell, more);
-  return row;
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-}
-
-/* ---------- board interactions ---------- */
-document.querySelectorAll('.db').forEach(section => {
-  const board = section.dataset.board;
-  section.querySelector('.db-head h2').addEventListener('click', () => {
-    state._ui.collapsed[board] = !state._ui.collapsed[board];
-    saveData();
-    section.classList.toggle('collapsed', !!state._ui.collapsed[board]);
-  });
-  section.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      state._ui.filter[board] = tab.dataset.filter;
-      saveData();
-      renderBoard(board);
-    });
-  });
-  const input = section.querySelector('.add-input');
-  const submit = () => {
-    if (input.value.trim()) {
-      addTask(board, input.value);
-      input.value = '';
-      input.focus();
-    }
-  };
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
-  section.querySelector('.db-add').addEventListener('click', e => {
-    if (e.target !== input) input.focus();
-  });
-});
-
-/* projects header */
-document.querySelector('.projects-head h2').addEventListener('click', () => {
-  state._ui.collapsed['__projects__'] = !state._ui.collapsed['__projects__'];
-  saveData();
-  document.getElementById('projects').classList.toggle('collapsed', !!state._ui.collapsed['__projects__']);
-});
-document.getElementById('btnAddProject').addEventListener('click', e => {
-  e.stopPropagation();
-  promptAddProject();
-});
-
-/* time chips */
-document.querySelectorAll('#timeChips .chip').forEach(c => {
-  c.addEventListener('click', () => {
-    state._ui.timeRange = c.dataset.range;
-    saveData();
-    renderTimeChips();
-    BOARDS.forEach(renderBoard);
-    renderHeader();
-  });
-});
-
-/* ---------- generic popover ---------- */
-const popover = document.getElementById('popover');
-function openPopover(anchor, items) {
-  popover.innerHTML = '';
-  items.forEach(item => {
-    if (item.sep) {
-      const sep = document.createElement('div');
-      sep.className = 'popover-sep';
-      popover.appendChild(sep);
-      return;
-    }
-    const el = document.createElement('div');
-    el.className = 'popover-item' + (item.danger ? ' danger' : '');
-    if (item.html) el.innerHTML = item.html;
-    else el.innerHTML = `<span class="popover-text">${escapeHtml(item.label)}</span>`;
-    el.addEventListener('click', () => {
-      try { item.onClick && item.onClick(); }
-      finally { closePopover(); }
-    });
-    popover.appendChild(el);
-  });
-  popover.hidden = false;
-  const rect = anchor.getBoundingClientRect();
-  const popRect = popover.getBoundingClientRect();
-  let top = rect.bottom + window.scrollY + 6;
-  let left = rect.left + window.scrollX;
-  if (left + popRect.width > window.scrollX + window.innerWidth - 12) {
-    left = window.scrollX + window.innerWidth - popRect.width - 12;
-  }
-  if (top + popRect.height > window.scrollY + window.innerHeight - 12) {
-    top = rect.top + window.scrollY - popRect.height - 6;
-  }
-  popover.style.top = top + 'px';
-  popover.style.left = left + 'px';
-}
-function closePopover() { popover.hidden = true; }
-document.addEventListener('click', e => {
-  if (!popover.hidden && !popover.contains(e.target)) closePopover();
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !popover.hidden) closePopover();
-});
-
-/* ---------- date picker ---------- */
-const datePicker = document.getElementById('datePicker');
-let datePickerCb = null;
-datePicker.addEventListener('change', () => {
-  if (datePickerCb) { datePickerCb(datePicker.value || null); datePickerCb = null; }
-});
-function openDatePicker(cb, current) {
-  datePickerCb = cb;
-  datePicker.value = current || '';
-  datePicker.focus();
-  if (typeof datePicker.showPicker === 'function') datePicker.showPicker();
-  else datePicker.click();
-}
-
-/* ---------- detail modal ---------- */
-const backdrop = document.getElementById('detailBackdrop');
-let currentDetail = null; // { board, id }
-
-function openDetail(board, id) {
-  const t = state[board].find(x => x.id === id);
-  if (!t) return;
-  currentDetail = { board, id };
-
-  document.getElementById('detailHeadMeta').textContent =
-    `${BOARD_EMOJI[board]} ${BOARD_NAME[board]} · 任務詳情`;
-  const title = document.getElementById('detailTitle');
-  title.textContent = t.text;
-  title.oninput = null;
-  title.onblur = () => {
-    const v = title.textContent.trim();
-    if (v && v !== t.text) updateTask(board, id, { text: v });
-  };
-
-  renderDetailPill('detailStatus', t.status, [
-    { val: 'todo',  html: '<span class="pill todo">尚未完成</span>' },
-    { val: 'doing', html: '<span class="pill doing">進行中</span>' },
-    { val: 'done',  html: '<span class="pill done">已完成</span>' },
-  ], '— 未設定 —', v => updateTask(board, id, { status: v }));
-
-  renderDetailPill('detailPriority', t.priority, [
-    { val: 'high',   html: '<span class="pill prio-high">高</span>' },
-    { val: 'medium', html: '<span class="pill prio-medium">中</span>' },
-    { val: 'low',    html: '<span class="pill prio-low">低</span>' },
-    { val: null,     label: '— 未設定 —' },
-  ], '＋ 設定優先度', v => updateTask(board, id, { priority: v }));
-
-  renderDetailPill('detailDifficulty', t.difficulty, [
-    { val: 'hard',   html: '<span class="pill diff-hard">困難</span>' },
-    { val: 'medium', html: '<span class="pill diff-medium">普通</span>' },
-    { val: 'easy',   html: '<span class="pill diff-easy">簡單</span>' },
-    { val: null,     label: '— 未設定 —' },
-  ], '＋ 設定難易度', v => updateTask(board, id, { difficulty: v }));
-
-  renderDetailDate('detailDueDate', t.dueDate, v => updateTask(board, id, { dueDate: v }));
-
-  const est = document.getElementById('detailEstimate');
-  est.value = t.estimateHours ?? '';
-  est.onchange = () => updateTask(board, id, { estimateHours: est.value ? Number(est.value) : null });
-
-  const act = document.getElementById('detailActual');
-  act.value = t.actualHours ?? '';
-  act.onchange = () => updateTask(board, id, { actualHours: act.value ? Number(act.value) : null });
-
-  const projSel = document.getElementById('detailProject');
-  projSel.innerHTML = '<option value="">— 無 —</option>' +
-    state.projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  projSel.value = t.projectId || '';
-  projSel.onchange = () => updateTask(board, id, { projectId: projSel.value || null });
-
-  const summary = document.getElementById('detailSummary');
-  summary.value = t.summary || '';
-  summary.onchange = () => updateTask(board, id, { summary: summary.value });
-
-  document.getElementById('btnDeleteFromDetail').onclick = () => {
-    if (confirm('確定刪除此任務?')) {
-      deleteTask(board, id);
-      closeDetail();
-    }
-  };
-
-  backdrop.hidden = false;
-}
-function closeDetail() {
-  backdrop.hidden = true;
-  currentDetail = null;
-}
-window.closeDetail = closeDetail; // expose for inline onclick
-
-function renderDetailPill(containerId, current, options, placeholder, onSelect) {
-  const c = document.getElementById(containerId);
-  c.innerHTML = '';
-  const trigger = document.createElement('span');
-  const found = options.find(o => o.val === current);
-  if (found && found.html) {
-    trigger.innerHTML = found.html;
-  } else {
-    trigger.innerHTML = `<span class="pill placeholder" style="opacity:1">${placeholder}</span>`;
-  }
-  trigger.style.cursor = 'pointer';
-  trigger.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(trigger.firstElementChild, options.map(o => ({
-      html: o.html, label: o.label,
-      onClick: () => { onSelect(o.val); openDetail(currentDetail.board, currentDetail.id); },
-    })).concat(current ? [{ sep: true }, { label: '清除', onClick: () => { onSelect(null); openDetail(currentDetail.board, currentDetail.id); } }] : []));
-  });
-  c.appendChild(trigger);
-}
-
-function renderDetailDate(containerId, current, onSelect) {
-  const c = document.getElementById(containerId);
-  c.innerHTML = '';
-  const span = document.createElement('span');
-  span.style.cursor = 'pointer';
-  span.style.padding = '4px 8px';
-  span.style.borderRadius = '3px';
-  span.style.fontSize = '13px';
-  if (current) {
-    span.textContent = `📅 ${formatDateLabel(current)}`;
-    span.style.color = dateState(current) === 'overdue' ? '#d44' :
-                       dateState(current) === 'today'   ? '#2383e2' : 'var(--text)';
-  } else {
-    span.innerHTML = '<span class="pill placeholder" style="opacity:1">＋ 設定日期</span>';
-  }
-  span.addEventListener('click', e => {
-    e.stopPropagation();
-    openPopover(span, [
-      { label: '今天',    onClick: () => { onSelect(todayISO());    openDetail(currentDetail.board, currentDetail.id); } },
-      { label: '明天',    onClick: () => { onSelect(addDaysISO(1)); openDetail(currentDetail.board, currentDetail.id); } },
-      { label: '後天',    onClick: () => { onSelect(addDaysISO(2)); openDetail(currentDetail.board, currentDetail.id); } },
-      { label: '一週後',  onClick: () => { onSelect(addDaysISO(7)); openDetail(currentDetail.board, currentDetail.id); } },
-      { sep: true },
-      { label: '自選日期...', onClick: () => openDatePicker(d => { onSelect(d || null); openDetail(currentDetail.board, currentDetail.id); }, current) },
-      ...(current ? [{ label: '清除', danger: true, onClick: () => { onSelect(null); openDetail(currentDetail.board, currentDetail.id); } }] : []),
-    ]);
-  });
-  c.appendChild(span);
-}
-
-/* ---------- export / reset ---------- */
-document.getElementById('btnExport').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `dashboard-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-});
-document.getElementById('btnReset').addEventListener('click', () => {
-  if (confirm('確定清空所有資料?此操作無法復原。')) {
-    state = emptyData();
-    saveData();
-    renderAll();
-  }
-});
-
-renderAll();
-setInterval(renderHeader, 60_000);
+/* -------- Boot -------- */
+loadTheme();
+checkWelcome();
 </script>
 </body>
 </html>
