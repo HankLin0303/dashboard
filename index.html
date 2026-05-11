@@ -16,13 +16,15 @@
   --divider: rgba(55, 53, 47, 0.09);
   --divider-strong: rgba(55, 53, 47, 0.16);
 
+  /* status */
   --pill-todo-bg:  #e3e2e0;
   --pill-todo-fg:  #37352f;
-  --pill-doing-bg: #fdecc8;
-  --pill-doing-fg: #7c5e10;
+  --pill-doing-bg: #d3e5ef;
+  --pill-doing-fg: #1f5478;
   --pill-done-bg:  #dbeddb;
   --pill-done-fg:  #2b593f;
 
+  /* priority */
   --pill-high-bg:  #ffe2dd;
   --pill-high-fg:  #a14b3a;
   --pill-med-bg:   #fdecc8;
@@ -30,8 +32,23 @@
   --pill-low-bg:   #d3e5ef;
   --pill-low-fg:   #1f5478;
 
+  /* difficulty (Notion 色) */
+  --pill-hard-bg:  #eee0da;
+  --pill-hard-fg:  #9f6b53;
+  --pill-mid-bg:   #dbeddb;
+  --pill-mid-fg:   #448361;
+  --pill-easy-bg:  #e8deee;
+  --pill-easy-fg:  #6940a5;
+
+  /* urgency */
+  --pill-crit-bg:  #ffe2dd;
+  --pill-crit-fg:  #a14b3a;
+  --pill-norm-bg:  #fdecc8;
+  --pill-norm-fg:  #7c5e10;
+
   --accent: #2383e2;
   --danger: #eb5757;
+  --warn:   #eb8a3a;
 
   --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
           "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Helvetica,
@@ -49,9 +66,9 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 button { font-family: inherit; }
-input, textarea { font-family: inherit; }
+input, textarea, select { font-family: inherit; }
 
-.page { max-width: 820px; margin: 0 auto; padding: 0 96px 120px; }
+.page { max-width: 900px; margin: 0 auto; padding: 0 72px 120px; }
 @media (max-width: 900px) { .page { padding: 0 24px 100px; } }
 
 .cover { font-size: 78px; line-height: 1; padding: 60px 0 12px; user-select: none; }
@@ -62,10 +79,107 @@ input, textarea { font-family: inherit; }
 }
 .page-meta {
   color: var(--text-mute); font-size: 13px;
-  display: flex; gap: 8px; align-items: center; margin-bottom: 32px;
+  display: flex; gap: 8px; align-items: center; margin-bottom: 24px;
 }
 .dot-sep { opacity: 0.6; }
 
+/* time-range chips */
+.time-chips {
+  display: flex; gap: 6px; margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 13px; padding: 5px 12px; border-radius: 999px;
+  background: var(--hover); color: var(--text-soft);
+  border: none; cursor: pointer; transition: 0.1s;
+}
+.chip:hover { background: var(--hover-2); color: var(--text); }
+.chip.active {
+  background: var(--text);
+  color: #fff;
+}
+.chip .chip-count {
+  margin-left: 4px; opacity: 0.7; font-size: 11px;
+}
+
+/* ---------- Projects ---------- */
+.projects {
+  margin-bottom: 40px;
+}
+.projects-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.projects-head h2 {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 20px; font-weight: 600; margin: 0;
+  cursor: pointer; user-select: none; line-height: 1.3;
+}
+.projects-head h2 .emoji { font-size: 18px; }
+.projects-count { font-size: 13px; color: var(--text-mute); margin-left: 4px; }
+.projects-add-btn {
+  margin-left: auto;
+  background: none; border: 1px solid var(--divider-strong);
+  color: var(--text-soft); cursor: pointer;
+  padding: 4px 10px; border-radius: 4px; font-size: 13px;
+}
+.projects-add-btn:hover { background: var(--hover); color: var(--text); }
+.projects.collapsed .toggle-caret { transform: rotate(-90deg); }
+.projects.collapsed .projects-grid { display: none; }
+
+.projects-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.project-card {
+  background: #fff; border: 1px solid var(--divider);
+  border-radius: 6px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  cursor: pointer; transition: 0.12s;
+}
+.project-card:hover { border-color: var(--divider-strong); background: #fafaf9; }
+.project-name {
+  font-size: 14.5px; font-weight: 500;
+  outline: none; word-break: break-word;
+  cursor: text;
+}
+.project-meta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12px; color: var(--text-soft);
+}
+.project-due { white-space: nowrap; }
+.project-progress {
+  display: flex; align-items: center; gap: 8px;
+}
+.progress-bar {
+  flex: 1; height: 5px; background: var(--hover-2);
+  border-radius: 99px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--pill-done-fg);
+  transition: width 0.2s;
+}
+.progress-text {
+  font-size: 11px; color: var(--text-mute); white-space: nowrap;
+}
+.project-actions {
+  opacity: 0; display: flex; gap: 4px; transition: 0.1s;
+  font-size: 12px; color: var(--text-mute);
+}
+.project-card:hover .project-actions { opacity: 1; }
+.project-act-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-mute); padding: 2px 6px; border-radius: 3px;
+}
+.project-act-btn:hover { background: var(--hover); color: var(--text); }
+
+.project-card.add {
+  display: flex; align-items: center; justify-content: center;
+  border-style: dashed; color: var(--text-mute); font-size: 14px;
+  background: transparent;
+}
+.project-card.add:hover { background: var(--hover); color: var(--text); }
+
+/* ---------- Boards ---------- */
 .db { margin-bottom: 36px; }
 .db-head {
   position: sticky; top: 0; background: var(--bg);
@@ -91,9 +205,21 @@ input, textarea { font-family: inherit; }
   background: none; border: none; font-size: 13px; color: var(--text-soft);
   padding: 6px 10px; cursor: pointer; border-radius: 4px 4px 0 0;
   position: relative; margin-bottom: -1px;
+  display: inline-flex; align-items: center; gap: 4px;
 }
 .tab:hover { background: var(--hover); color: var(--text); }
 .tab.active { color: var(--text); font-weight: 500; box-shadow: inset 0 -2px 0 var(--text); }
+.tab-count {
+  font-size: 11px; color: var(--text-mute);
+  background: var(--hover); padding: 1px 6px; border-radius: 999px;
+}
+.tab.active .tab-count { background: var(--hover-2); color: var(--text-soft); }
+.tab.wip-over .tab-count {
+  background: var(--pill-high-bg); color: var(--pill-high-fg); font-weight: 600;
+}
+.tab.wip-over::after {
+  content: "⚠"; font-size: 11px; margin-left: 2px; color: var(--warn);
+}
 
 .db-rows { display: flex; flex-direction: column; }
 
@@ -122,8 +248,14 @@ input, textarea { font-family: inherit; }
 .row .title {
   outline: none; font-size: 14.5px; word-break: break-word;
   padding: 2px 2px; cursor: text;
+  display: flex; flex-direction: column; gap: 2px;
 }
-.row.done .title { color: var(--text-mute); text-decoration: line-through; }
+.row .title-text { display: inline; }
+.row .title-meta {
+  font-size: 11px; color: var(--text-mute); display: flex; gap: 8px;
+}
+.row .title-meta-item { white-space: nowrap; }
+.row.done .title-text { color: var(--text-mute); text-decoration: line-through; }
 
 .pill {
   display: inline-block; font-size: 12px; padding: 2px 8px;
@@ -136,6 +268,11 @@ input, textarea { font-family: inherit; }
 .pill.prio-high   { background: var(--pill-high-bg); color: var(--pill-high-fg); }
 .pill.prio-medium { background: var(--pill-med-bg);  color: var(--pill-med-fg); }
 .pill.prio-low    { background: var(--pill-low-bg);  color: var(--pill-low-fg); }
+.pill.diff-hard   { background: var(--pill-hard-bg); color: var(--pill-hard-fg); }
+.pill.diff-medium { background: var(--pill-mid-bg);  color: var(--pill-mid-fg); }
+.pill.diff-easy   { background: var(--pill-easy-bg); color: var(--pill-easy-fg); }
+.pill.urgency-critical { background: var(--pill-crit-bg); color: var(--pill-crit-fg); }
+.pill.urgency-normal   { background: var(--pill-norm-bg); color: var(--pill-norm-fg); }
 .pill.placeholder {
   background: transparent; color: var(--text-mute);
   opacity: 0; transition: opacity 0.1s;
@@ -190,6 +327,7 @@ input, textarea { font-family: inherit; }
   left: -9999px; width: 1px; height: 1px;
 }
 
+/* popover */
 .popover {
   position: absolute; background: #fff;
   border: 1px solid var(--divider); border-radius: 6px;
@@ -219,6 +357,89 @@ input, textarea { font-family: inherit; }
   color: var(--text-mute); font-size: 12px;
 }
 .page-foot > span { margin-right: auto; }
+
+/* ---------- Detail modal ---------- */
+.detail-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 15, 15, 0.4);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+}
+.detail-modal {
+  background: #fff; border-radius: 6px;
+  box-shadow: 0 10px 40px rgba(15, 15, 15, 0.2);
+  width: min(640px, 92vw); max-height: 88vh;
+  overflow-y: auto;
+}
+.detail-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px 8px;
+}
+.detail-head-meta {
+  font-size: 11px; color: var(--text-mute); letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.icon-btn {
+  background: none; border: none; font-size: 18px;
+  color: var(--text-mute); cursor: pointer;
+  width: 32px; height: 32px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { background: var(--hover); color: var(--text); }
+
+.detail-title {
+  font-size: 22px; font-weight: 700;
+  padding: 0 20px 16px; outline: none; line-height: 1.3;
+  word-break: break-word;
+}
+
+.detail-grid {
+  display: grid; grid-template-columns: 90px 1fr;
+  gap: 4px 12px; padding: 4px 20px 16px;
+  font-size: 13px; align-items: center;
+}
+.detail-label { color: var(--text-mute); font-size: 12px; padding: 6px 0; }
+.detail-value { padding: 4px 0; }
+.detail-value .pill { font-size: 12.5px; }
+.detail-value input[type=number], .detail-value select {
+  width: 100%; padding: 6px 8px;
+  border: 1px solid transparent; border-radius: 4px;
+  font-size: 13.5px; background: transparent; color: var(--text);
+  outline: none;
+}
+.detail-value input[type=number]:hover, .detail-value select:hover {
+  background: var(--hover);
+}
+.detail-value input[type=number]:focus, .detail-value select:focus {
+  background: #fff; border-color: var(--divider-strong);
+}
+
+.detail-section { padding: 12px 20px; border-top: 1px solid var(--divider); }
+.detail-section-label {
+  font-size: 11px; color: var(--text-mute);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.detail-summary {
+  width: 100%; min-height: 80px; resize: vertical;
+  border: 1px solid var(--divider); border-radius: 4px;
+  padding: 8px 10px; font-size: 14px; color: var(--text);
+  outline: none; background: var(--hover);
+  font-family: inherit; line-height: 1.5;
+}
+.detail-summary:focus { background: #fff; border-color: var(--divider-strong); }
+
+.detail-foot {
+  display: flex; justify-content: space-between; padding: 12px 20px;
+  border-top: 1px solid var(--divider);
+}
+.detail-del { color: var(--danger); }
+.detail-del:hover { background: #fdecea; }
+
+/* row tag pills under title */
+.title-tag {
+  font-size: 10.5px; padding: 1px 6px; border-radius: 3px;
+  background: var(--hover-2); color: var(--text-soft);
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -235,14 +456,32 @@ input, textarea { font-family: inherit; }
     </div>
   </header>
 
+  <!-- Time range chips -->
+  <div class="time-chips" id="timeChips">
+    <button class="chip active" data-range="all">全部</button>
+    <button class="chip" data-range="today">今日</button>
+    <button class="chip" data-range="tomorrow">明日</button>
+    <button class="chip" data-range="week">一週內</button>
+    <button class="chip" data-range="unscheduled">未排程</button>
+  </div>
+
+  <!-- Projects -->
+  <section class="projects" id="projects">
+    <div class="projects-head">
+      <h2><span class="toggle-caret">▾</span><span class="emoji">🎯</span>專案<span class="projects-count" id="projectsCount"></span></h2>
+      <button class="projects-add-btn" id="btnAddProject">＋ 新增專案</button>
+    </div>
+    <div class="projects-grid" id="projectsGrid"></div>
+  </section>
+
   <section class="db" data-board="notes">
     <div class="db-head">
       <h2><span class="toggle-caret">▾</span><span class="emoji">📒</span><span class="db-title">筆記</span><span class="db-count" data-count></span></h2>
       <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部</button>
-        <button class="tab" data-filter="todo">尚未完成</button>
-        <button class="tab" data-filter="doing">進行中</button>
-        <button class="tab" data-filter="done">已完成</button>
+        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
+        <button class="tab" data-filter="todo">尚未完成<span class="tab-count"></span></button>
+        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
+        <button class="tab" data-filter="done">已完成<span class="tab-count"></span></button>
       </div>
     </div>
     <div class="db-body">
@@ -255,10 +494,10 @@ input, textarea { font-family: inherit; }
     <div class="db-head">
       <h2><span class="toggle-caret">▾</span><span class="emoji">💼</span><span class="db-title">工作</span><span class="db-count" data-count></span></h2>
       <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部</button>
-        <button class="tab" data-filter="todo">尚未完成</button>
-        <button class="tab" data-filter="doing">進行中</button>
-        <button class="tab" data-filter="done">已完成</button>
+        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
+        <button class="tab" data-filter="todo">尚未完成<span class="tab-count"></span></button>
+        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
+        <button class="tab" data-filter="done">已完成<span class="tab-count"></span></button>
       </div>
     </div>
     <div class="db-body">
@@ -271,10 +510,10 @@ input, textarea { font-family: inherit; }
     <div class="db-head">
       <h2><span class="toggle-caret">▾</span><span class="emoji">🤝</span><span class="db-title">會議</span><span class="db-count" data-count></span></h2>
       <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部</button>
-        <button class="tab" data-filter="todo">待進行</button>
-        <button class="tab" data-filter="doing">進行中</button>
-        <button class="tab" data-filter="done">已結束</button>
+        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
+        <button class="tab" data-filter="todo">待進行<span class="tab-count"></span></button>
+        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
+        <button class="tab" data-filter="done">已結束<span class="tab-count"></span></button>
       </div>
     </div>
     <div class="db-body">
@@ -287,10 +526,10 @@ input, textarea { font-family: inherit; }
     <div class="db-head">
       <h2><span class="toggle-caret">▾</span><span class="emoji">🌱</span><span class="db-title">個人計畫</span><span class="db-count" data-count></span></h2>
       <div class="db-tabs">
-        <button class="tab active" data-filter="all">全部</button>
-        <button class="tab" data-filter="todo">尚未完成</button>
-        <button class="tab" data-filter="doing">進行中</button>
-        <button class="tab" data-filter="done">已完成</button>
+        <button class="tab active" data-filter="all">全部<span class="tab-count"></span></button>
+        <button class="tab" data-filter="todo">尚未完成<span class="tab-count"></span></button>
+        <button class="tab" data-filter="doing">進行中<span class="tab-count"></span></button>
+        <button class="tab" data-filter="done">已完成<span class="tab-count"></span></button>
       </div>
     </div>
     <div class="db-body">
@@ -308,17 +547,68 @@ input, textarea { font-family: inherit; }
   <div id="popover" class="popover" hidden></div>
   <input id="datePicker" type="date" class="hidden-datepicker" />
 
+  <!-- Detail modal -->
+  <div id="detailBackdrop" class="detail-backdrop" hidden
+       onclick="if(event.target===this)closeDetail()">
+    <div class="detail-modal">
+      <div class="detail-head">
+        <span class="detail-head-meta" id="detailHeadMeta"></span>
+        <button type="button" class="icon-btn" id="btnCloseDetail"
+                title="關閉 (Esc)" aria-label="關閉"
+                onclick="closeDetail()">✕</button>
+      </div>
+      <div class="detail-title" id="detailTitle" contenteditable="true" spellcheck="false"></div>
+      <div class="detail-grid">
+        <div class="detail-label">狀態</div>
+        <div class="detail-value" id="detailStatus"></div>
+        <div class="detail-label">優先度</div>
+        <div class="detail-value" id="detailPriority"></div>
+        <div class="detail-label">難易度</div>
+        <div class="detail-value" id="detailDifficulty"></div>
+        <div class="detail-label">執行時間</div>
+        <div class="detail-value" id="detailDueDate"></div>
+        <div class="detail-label">估計時間</div>
+        <div class="detail-value"><input type="number" id="detailEstimate" min="0" step="0.5" placeholder="小時 (例: 1.5)" /></div>
+        <div class="detail-label">實際時間</div>
+        <div class="detail-value"><input type="number" id="detailActual" min="0" step="0.5" placeholder="小時" /></div>
+        <div class="detail-label">關聯專案</div>
+        <div class="detail-value"><select id="detailProject"></select></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label">💭 總結 / 心得</div>
+        <textarea class="detail-summary" id="detailSummary" placeholder="任務做完後寫下心得或結論..."></textarea>
+      </div>
+      <div class="detail-foot">
+        <button type="button" class="text-btn detail-del" id="btnDeleteFromDetail">刪除任務</button>
+        <button type="button" class="icon-btn" style="width:auto;padding:4px 14px;border:1px solid var(--divider-strong);"
+                onclick="closeDetail()">完成</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
+// Standalone Esc handler — closes any visible modal regardless of main script state.
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.detail-backdrop:not([hidden])').forEach(function(el){ el.hidden = true; });
+  }
+});
+
 const STORAGE_KEY = 'dashboard.tasks.v2';
 const BOARDS   = ['notes', 'work', 'meetings', 'personal'];
-const STATUSES = ['todo', 'doing', 'done'];
 const STATUS_LABEL = { todo: '尚未完成', doing: '進行中', done: '已完成' };
 const PRIO_LABEL   = { high: '高', medium: '中', low: '低' };
+const DIFF_LABEL   = { hard: '困難', medium: '普通', easy: '簡單' };
+const URGENCY_LABEL = { critical: '超重要', normal: '普通' };
+const BOARD_EMOJI = { notes: '📒', work: '💼', meetings: '🤝', personal: '🌱' };
+const BOARD_NAME  = { notes: '筆記', work: '工作', meetings: '會議', personal: '個人計畫' };
+const WIP_LIMIT = 5;
 
+/* ---------- data ---------- */
 function emptyData() {
-  const d = { _ui: { collapsed: {}, filter: {} } };
+  const d = { projects: [], _ui: { collapsed: {}, filter: {}, timeRange: 'all' } };
   BOARDS.forEach(b => { d[b] = []; d._ui.filter[b] = 'all'; });
   return d;
 }
@@ -327,15 +617,22 @@ function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyData();
     const parsed = JSON.parse(raw);
-    if (!parsed._ui) parsed._ui = { collapsed: {}, filter: {} };
-    if (!parsed._ui.filter) parsed._ui.filter = {};
+    if (!parsed._ui) parsed._ui = {};
     if (!parsed._ui.collapsed) parsed._ui.collapsed = {};
+    if (!parsed._ui.filter) parsed._ui.filter = {};
+    if (!parsed._ui.timeRange) parsed._ui.timeRange = 'all';
+    if (!Array.isArray(parsed.projects)) parsed.projects = [];
     BOARDS.forEach(b => {
       if (!Array.isArray(parsed[b])) parsed[b] = [];
       if (!parsed._ui.filter[b]) parsed._ui.filter[b] = 'all';
       parsed[b].forEach(t => {
         if (t.priority === undefined) t.priority = null;
         if (t.dueDate === undefined) t.dueDate = null;
+        if (t.difficulty === undefined) t.difficulty = null;
+        if (t.estimateHours === undefined) t.estimateHours = null;
+        if (t.actualHours === undefined) t.actualHours = null;
+        if (t.projectId === undefined) t.projectId = null;
+        if (t.summary === undefined) t.summary = '';
       });
     });
     return parsed;
@@ -344,20 +641,27 @@ function loadData() {
 function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 let state = loadData();
 
+/* ---------- CRUD: tasks ---------- */
 function addTask(board, text, opts = {}) {
   const t = (text || '').trim();
   if (!t) return;
   state[board].push({
     id: crypto.randomUUID(),
     text: t,
-    status:   opts.status   ?? 'todo',
-    priority: opts.priority ?? null,
-    dueDate:  opts.dueDate  ?? null,
+    status:        opts.status        ?? 'todo',
+    priority:      opts.priority      ?? null,
+    dueDate:       opts.dueDate       ?? null,
+    difficulty:    opts.difficulty    ?? null,
+    estimateHours: opts.estimateHours ?? null,
+    actualHours:   opts.actualHours   ?? null,
+    projectId:     opts.projectId     ?? null,
+    summary:       opts.summary       ?? '',
     createdAt: Date.now(),
   });
   saveData();
   renderBoard(board);
   renderHeader();
+  renderProjects();
 }
 function updateTask(board, id, patch) {
   const list = state[board];
@@ -367,19 +671,71 @@ function updateTask(board, id, patch) {
   saveData();
   renderBoard(board);
   renderHeader();
+  renderProjects();
 }
 function deleteTask(board, id) {
   state[board] = state[board].filter(t => t.id !== id);
   saveData();
   renderBoard(board);
   renderHeader();
+  renderProjects();
+}
+function findTask(id) {
+  for (const b of BOARDS) {
+    const t = state[b].find(x => x.id === id);
+    if (t) return { board: b, task: t };
+  }
+  return null;
 }
 
-function pad(n) { return String(n).padStart(2, '0'); }
-function todayISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+/* ---------- CRUD: projects ---------- */
+function addProject(name) {
+  const t = (name || '').trim();
+  if (!t) return;
+  state.projects.push({
+    id: crypto.randomUUID(),
+    name: t,
+    urgency: null,
+    dueDate: null,
+    createdAt: Date.now(),
+  });
+  saveData();
+  renderProjects();
 }
+function updateProject(id, patch) {
+  const i = state.projects.findIndex(p => p.id === id);
+  if (i === -1) return;
+  state.projects[i] = { ...state.projects[i], ...patch };
+  saveData();
+  renderProjects();
+  // tasks may show project name in detail modal
+  BOARDS.forEach(renderBoard);
+}
+function deleteProject(id) {
+  if (!confirm('確定刪除此專案?關聯的任務不會被刪除,但會解除關聯。')) return;
+  state.projects = state.projects.filter(p => p.id !== id);
+  // unlink tasks
+  BOARDS.forEach(b => state[b].forEach(t => {
+    if (t.projectId === id) t.projectId = null;
+  }));
+  saveData();
+  renderProjects();
+  BOARDS.forEach(renderBoard);
+}
+function projectProgress(projectId) {
+  let total = 0, done = 0;
+  BOARDS.forEach(b => state[b].forEach(t => {
+    if (t.projectId === projectId) {
+      total++;
+      if (t.status === 'done') done++;
+    }
+  }));
+  return { total, done };
+}
+
+/* ---------- date helpers ---------- */
+function pad(n) { return String(n).padStart(2, '0'); }
+function todayISO() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function addDaysISO(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -404,27 +760,214 @@ function dateState(iso) {
   return '';
 }
 
+/* ---------- time-range filter ---------- */
+function passesTimeRange(task) {
+  const r = state._ui.timeRange || 'all';
+  if (r === 'all') return true;
+  const d = task.dueDate;
+  if (r === 'unscheduled') return !d;
+  if (!d) return false;
+  if (r === 'today') return d === todayISO();
+  if (r === 'tomorrow') return d === addDaysISO(1);
+  if (r === 'week') {
+    const t = todayISO();
+    const wk = addDaysISO(7);
+    return d >= t && d <= wk;
+  }
+  return true;
+}
+
+/* ---------- render ---------- */
 function renderAll() {
-  BOARDS.forEach(renderBoard);
   renderHeader();
+  renderTimeChips();
+  renderProjects();
+  BOARDS.forEach(renderBoard);
   applyCollapseStates();
 }
+
+function renderHeader() {
+  const now = new Date();
+  const wk = ['週日','週一','週二','週三','週四','週五','週六'][now.getDay()];
+  document.getElementById('dateLabel').textContent =
+    `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${wk}`;
+  let total = 0, done = 0, doing = 0;
+  BOARDS.forEach(b => state[b].forEach(t => {
+    if (!passesTimeRange(t)) return;
+    total++;
+    if (t.status === 'done') done++;
+    else if (t.status === 'doing') doing++;
+  }));
+  const parts = [`${total} 個任務`];
+  if (doing) parts.push(`${doing} 進行中`);
+  if (done)  parts.push(`${done} 已完成`);
+  document.getElementById('statSummary').textContent = parts.join(' · ');
+}
+
+function renderTimeChips() {
+  const r = state._ui.timeRange || 'all';
+  document.querySelectorAll('#timeChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.range === r);
+  });
+}
+
+function applyCollapseStates() {
+  document.querySelectorAll('.db').forEach(sec => {
+    const b = sec.dataset.board;
+    sec.classList.toggle('collapsed', !!state._ui.collapsed[b]);
+  });
+  document.getElementById('projects').classList.toggle('collapsed',
+    !!state._ui.collapsed['__projects__']);
+}
+
+/* projects ui */
+function renderProjects() {
+  const grid = document.getElementById('projectsGrid');
+  const count = document.getElementById('projectsCount');
+  grid.innerHTML = '';
+  count.textContent = state.projects.length ? `· ${state.projects.length}` : '';
+  state.projects.forEach(p => grid.appendChild(projectCardNode(p)));
+  // add card
+  const add = document.createElement('div');
+  add.className = 'project-card add';
+  add.textContent = '＋ 新增專案';
+  add.addEventListener('click', () => promptAddProject());
+  grid.appendChild(add);
+}
+
+function promptAddProject() {
+  const name = prompt('專案名稱:');
+  if (name) addProject(name);
+}
+
+function projectCardNode(p) {
+  const { total, done } = projectProgress(p.id);
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+
+  const card = document.createElement('div');
+  card.className = 'project-card';
+
+  // name
+  const name = document.createElement('div');
+  name.className = 'project-name';
+  name.contentEditable = 'true';
+  name.spellcheck = false;
+  name.textContent = p.name;
+  name.addEventListener('blur', () => {
+    const v = name.textContent.trim();
+    if (!v) { deleteProject(p.id); return; }
+    if (v !== p.name) updateProject(p.id, { name: v });
+  });
+  name.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
+  });
+  name.addEventListener('click', e => e.stopPropagation());
+
+  // meta row: urgency pill + due date
+  const meta = document.createElement('div');
+  meta.className = 'project-meta';
+
+  const urgency = document.createElement('span');
+  if (p.urgency) {
+    urgency.className = 'pill urgency-' + p.urgency;
+    urgency.textContent = URGENCY_LABEL[p.urgency];
+  } else {
+    urgency.className = 'pill placeholder';
+    urgency.textContent = '＋ 急迫性';
+    urgency.style.opacity = '1';
+  }
+  urgency.addEventListener('click', e => {
+    e.stopPropagation();
+    openPopover(urgency, [
+      { html: '<span class="pill urgency-critical">超重要</span>', onClick: () => updateProject(p.id, { urgency: 'critical' }) },
+      { html: '<span class="pill urgency-normal">普通</span>', onClick: () => updateProject(p.id, { urgency: 'normal' }) },
+      { sep: true },
+      { label: '清除', onClick: () => updateProject(p.id, { urgency: null }) },
+    ]);
+  });
+
+  const due = document.createElement('span');
+  due.className = 'project-due ' + (p.dueDate ? dateState(p.dueDate) : '');
+  due.style.cursor = 'pointer';
+  due.textContent = p.dueDate ? `📅 ${formatDateLabel(p.dueDate)}` : '📅 ＋日期';
+  if (!p.dueDate) due.style.color = 'var(--text-mute)';
+  due.addEventListener('click', e => {
+    e.stopPropagation();
+    openPopover(due, [
+      { label: '今天',    onClick: () => updateProject(p.id, { dueDate: todayISO() }) },
+      { label: '明天',    onClick: () => updateProject(p.id, { dueDate: addDaysISO(1) }) },
+      { label: '一週後',  onClick: () => updateProject(p.id, { dueDate: addDaysISO(7) }) },
+      { label: '兩週後',  onClick: () => updateProject(p.id, { dueDate: addDaysISO(14) }) },
+      { sep: true },
+      { label: '自選日期...', onClick: () => openDatePicker(d => updateProject(p.id, { dueDate: d || null }), p.dueDate) },
+      { label: '清除', onClick: () => updateProject(p.id, { dueDate: null }), danger: true },
+    ]);
+  });
+
+  meta.append(urgency, due);
+
+  // progress
+  const progress = document.createElement('div');
+  progress.className = 'project-progress';
+  const bar = document.createElement('div');
+  bar.className = 'progress-bar';
+  const fill = document.createElement('div');
+  fill.className = 'progress-fill';
+  fill.style.width = pct + '%';
+  bar.appendChild(fill);
+  const text = document.createElement('span');
+  text.className = 'progress-text';
+  text.textContent = total === 0 ? '尚無任務' : `${done}/${total}`;
+  progress.append(bar, text);
+
+  // delete
+  const actions = document.createElement('div');
+  actions.className = 'project-actions';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'project-act-btn';
+  delBtn.textContent = '刪除';
+  delBtn.addEventListener('click', e => { e.stopPropagation(); deleteProject(p.id); });
+  actions.appendChild(delBtn);
+
+  card.append(name, meta, progress, actions);
+  return card;
+}
+
+/* board ui */
 function renderBoard(board) {
   const section = document.querySelector(`.db[data-board="${board}"]`);
   if (!section) return;
+
   const filter = state._ui.filter[board] || 'all';
-  section.querySelectorAll('.tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.filter === filter);
-  });
   const all = state[board] || [];
-  const filtered = filter === 'all' ? all : all.filter(t => t.status === filter);
+  const inTimeRange = all.filter(passesTimeRange);
+
+  // tabs (with counts)
+  const counts = {
+    all:   inTimeRange.length,
+    todo:  inTimeRange.filter(t => t.status === 'todo').length,
+    doing: inTimeRange.filter(t => t.status === 'doing').length,
+    done:  inTimeRange.filter(t => t.status === 'done').length,
+  };
+  section.querySelectorAll('.tab').forEach(t => {
+    const f = t.dataset.filter;
+    t.classList.toggle('active', f === filter);
+    t.classList.toggle('wip-over', f === 'doing' && counts.doing > WIP_LIMIT);
+    t.querySelector('.tab-count').textContent = counts[f];
+  });
+
   section.querySelector('[data-count]').textContent = all.length ? `· ${all.length}` : '';
+
   const container = section.querySelector('.db-rows');
   container.innerHTML = '';
+
+  const filtered = filter === 'all' ? inTimeRange : inTimeRange.filter(t => t.status === filter);
   if (filtered.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'row empty';
-    empty.textContent = filter === 'all' ? '尚無項目,在下方新增第一筆。' : '此分頁目前沒有項目。';
+    if (state._ui.timeRange !== 'all') empty.textContent = '此時間範圍內沒有符合條件的項目。';
+    else if (filter === 'all') empty.textContent = '尚無項目,在下方新增第一筆。';
+    else empty.textContent = '此分頁目前沒有項目。';
     container.appendChild(empty);
   } else {
     filtered.forEach(t => container.appendChild(rowNode(board, t)));
@@ -436,29 +979,52 @@ function rowNode(board, task) {
   row.className = 'row' + (task.status === 'done' ? ' done' : '');
   row.dataset.id = task.id;
 
+  // check
   const check = document.createElement('div');
   check.className = 'check';
   check.title = '切換 完成 / 尚未完成';
-  check.addEventListener('click', () => {
+  check.addEventListener('click', e => {
+    e.stopPropagation();
     const next = task.status === 'done' ? 'todo' : 'done';
     updateTask(board, task.id, { status: next });
   });
 
-  const title = document.createElement('div');
-  title.className = 'title';
-  title.contentEditable = 'true';
-  title.spellcheck = false;
-  title.textContent = task.text;
-  title.addEventListener('blur', () => {
-    const v = title.textContent.trim();
+  // title (with sub-meta)
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'title';
+  const titleText = document.createElement('div');
+  titleText.className = 'title-text';
+  titleText.contentEditable = 'true';
+  titleText.spellcheck = false;
+  titleText.textContent = task.text;
+  titleText.addEventListener('click', e => e.stopPropagation());
+  titleText.addEventListener('blur', () => {
+    const v = titleText.textContent.trim();
     if (!v) { deleteTask(board, task.id); return; }
     if (v !== task.text) updateTask(board, task.id, { text: v });
   });
-  title.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); title.blur(); }
-    if (e.key === 'Escape') { title.textContent = task.text; title.blur(); }
+  titleText.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); titleText.blur(); }
+    if (e.key === 'Escape') { titleText.textContent = task.text; titleText.blur(); }
   });
+  titleWrap.appendChild(titleText);
 
+  // sub-meta: difficulty + estimate + project name
+  const metaItems = [];
+  if (task.difficulty) metaItems.push(`<span class="title-tag">${DIFF_LABEL[task.difficulty]}</span>`);
+  if (task.estimateHours != null) metaItems.push(`<span class="title-tag">⏱ ${task.estimateHours}h</span>`);
+  if (task.projectId) {
+    const proj = state.projects.find(p => p.id === task.projectId);
+    if (proj) metaItems.push(`<span class="title-tag">🎯 ${escapeHtml(proj.name)}</span>`);
+  }
+  if (metaItems.length) {
+    const sub = document.createElement('div');
+    sub.className = 'title-meta';
+    sub.innerHTML = metaItems.join('');
+    titleWrap.appendChild(sub);
+  }
+
+  // priority pill
   const prioCell = document.createElement('div');
   prioCell.className = 'prio-cell';
   const prio = document.createElement('span');
@@ -481,6 +1047,7 @@ function rowNode(board, task) {
   });
   prioCell.appendChild(prio);
 
+  // date cell
   const dateCell = document.createElement('div');
   if (task.dueDate) {
     dateCell.className = 'date-cell ' + dateState(task.dueDate);
@@ -502,6 +1069,7 @@ function rowNode(board, task) {
     ]);
   });
 
+  // status pill
   const statusCell = document.createElement('div');
   statusCell.className = 'status-cell';
   const pill = document.createElement('span');
@@ -514,51 +1082,33 @@ function rowNode(board, task) {
       { html: '<span class="pill doing">進行中</span>',   onClick: () => updateTask(board, task.id, { status: 'doing' }) },
       { html: '<span class="pill done">已完成</span>',    onClick: () => updateTask(board, task.id, { status: 'done' }) },
       { sep: true },
+      { label: '編輯詳情...', onClick: () => openDetail(board, task.id) },
       { label: '刪除', danger: true, onClick: () => deleteTask(board, task.id) },
     ]);
   });
   statusCell.appendChild(pill);
 
+  // more menu
   const more = document.createElement('button');
   more.className = 'row-more';
-  more.title = '更多';
+  more.title = '編輯詳情';
   more.textContent = '⋯';
   more.addEventListener('click', e => {
     e.stopPropagation();
-    openPopover(more, [
-      { label: '切換 完成 / 尚未完成', onClick: () => updateTask(board, task.id, { status: task.status === 'done' ? 'todo' : 'done' }) },
-      { sep: true },
-      { label: '刪除', danger: true, onClick: () => deleteTask(board, task.id) },
-    ]);
+    openDetail(board, task.id);
   });
 
-  row.append(check, title, prioCell, dateCell, statusCell, more);
+  row.append(check, titleWrap, prioCell, dateCell, statusCell, more);
   return row;
 }
 
-function renderHeader() {
-  const now = new Date();
-  const wk = ['週日','週一','週二','週三','週四','週五','週六'][now.getDay()];
-  document.getElementById('dateLabel').textContent =
-    `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${wk}`;
-  let total = 0, done = 0, doing = 0;
-  BOARDS.forEach(b => state[b].forEach(t => {
-    total++;
-    if (t.status === 'done') done++;
-    else if (t.status === 'doing') doing++;
-  }));
-  const parts = [`${total} 個任務`];
-  if (doing) parts.push(`${doing} 進行中`);
-  if (done)  parts.push(`${done} 已完成`);
-  document.getElementById('statSummary').textContent = parts.join(' · ');
-}
-function applyCollapseStates() {
-  document.querySelectorAll('.db').forEach(sec => {
-    const b = sec.dataset.board;
-    sec.classList.toggle('collapsed', !!state._ui.collapsed[b]);
-  });
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
 }
 
+/* ---------- board interactions ---------- */
 document.querySelectorAll('.db').forEach(section => {
   const board = section.dataset.board;
   section.querySelector('.db-head h2').addEventListener('click', () => {
@@ -587,6 +1137,29 @@ document.querySelectorAll('.db').forEach(section => {
   });
 });
 
+/* projects header */
+document.querySelector('.projects-head h2').addEventListener('click', () => {
+  state._ui.collapsed['__projects__'] = !state._ui.collapsed['__projects__'];
+  saveData();
+  document.getElementById('projects').classList.toggle('collapsed', !!state._ui.collapsed['__projects__']);
+});
+document.getElementById('btnAddProject').addEventListener('click', e => {
+  e.stopPropagation();
+  promptAddProject();
+});
+
+/* time chips */
+document.querySelectorAll('#timeChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    state._ui.timeRange = c.dataset.range;
+    saveData();
+    renderTimeChips();
+    BOARDS.forEach(renderBoard);
+    renderHeader();
+  });
+});
+
+/* ---------- generic popover ---------- */
 const popover = document.getElementById('popover');
 function openPopover(anchor, items) {
   popover.innerHTML = '';
@@ -600,7 +1173,7 @@ function openPopover(anchor, items) {
     const el = document.createElement('div');
     el.className = 'popover-item' + (item.danger ? ' danger' : '');
     if (item.html) el.innerHTML = item.html;
-    else el.innerHTML = `<span class="popover-text">${item.label}</span>`;
+    else el.innerHTML = `<span class="popover-text">${escapeHtml(item.label)}</span>`;
     el.addEventListener('click', () => {
       try { item.onClick && item.onClick(); }
       finally { closePopover(); }
@@ -629,6 +1202,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !popover.hidden) closePopover();
 });
 
+/* ---------- date picker ---------- */
 const datePicker = document.getElementById('datePicker');
 let datePickerCb = null;
 datePicker.addEventListener('change', () => {
@@ -642,6 +1216,132 @@ function openDatePicker(cb, current) {
   else datePicker.click();
 }
 
+/* ---------- detail modal ---------- */
+const backdrop = document.getElementById('detailBackdrop');
+let currentDetail = null; // { board, id }
+
+function openDetail(board, id) {
+  const t = state[board].find(x => x.id === id);
+  if (!t) return;
+  currentDetail = { board, id };
+
+  document.getElementById('detailHeadMeta').textContent =
+    `${BOARD_EMOJI[board]} ${BOARD_NAME[board]} · 任務詳情`;
+  const title = document.getElementById('detailTitle');
+  title.textContent = t.text;
+  title.oninput = null;
+  title.onblur = () => {
+    const v = title.textContent.trim();
+    if (v && v !== t.text) updateTask(board, id, { text: v });
+  };
+
+  renderDetailPill('detailStatus', t.status, [
+    { val: 'todo',  html: '<span class="pill todo">尚未完成</span>' },
+    { val: 'doing', html: '<span class="pill doing">進行中</span>' },
+    { val: 'done',  html: '<span class="pill done">已完成</span>' },
+  ], '— 未設定 —', v => updateTask(board, id, { status: v }));
+
+  renderDetailPill('detailPriority', t.priority, [
+    { val: 'high',   html: '<span class="pill prio-high">高</span>' },
+    { val: 'medium', html: '<span class="pill prio-medium">中</span>' },
+    { val: 'low',    html: '<span class="pill prio-low">低</span>' },
+    { val: null,     label: '— 未設定 —' },
+  ], '＋ 設定優先度', v => updateTask(board, id, { priority: v }));
+
+  renderDetailPill('detailDifficulty', t.difficulty, [
+    { val: 'hard',   html: '<span class="pill diff-hard">困難</span>' },
+    { val: 'medium', html: '<span class="pill diff-medium">普通</span>' },
+    { val: 'easy',   html: '<span class="pill diff-easy">簡單</span>' },
+    { val: null,     label: '— 未設定 —' },
+  ], '＋ 設定難易度', v => updateTask(board, id, { difficulty: v }));
+
+  renderDetailDate('detailDueDate', t.dueDate, v => updateTask(board, id, { dueDate: v }));
+
+  const est = document.getElementById('detailEstimate');
+  est.value = t.estimateHours ?? '';
+  est.onchange = () => updateTask(board, id, { estimateHours: est.value ? Number(est.value) : null });
+
+  const act = document.getElementById('detailActual');
+  act.value = t.actualHours ?? '';
+  act.onchange = () => updateTask(board, id, { actualHours: act.value ? Number(act.value) : null });
+
+  const projSel = document.getElementById('detailProject');
+  projSel.innerHTML = '<option value="">— 無 —</option>' +
+    state.projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  projSel.value = t.projectId || '';
+  projSel.onchange = () => updateTask(board, id, { projectId: projSel.value || null });
+
+  const summary = document.getElementById('detailSummary');
+  summary.value = t.summary || '';
+  summary.onchange = () => updateTask(board, id, { summary: summary.value });
+
+  document.getElementById('btnDeleteFromDetail').onclick = () => {
+    if (confirm('確定刪除此任務?')) {
+      deleteTask(board, id);
+      closeDetail();
+    }
+  };
+
+  backdrop.hidden = false;
+}
+function closeDetail() {
+  backdrop.hidden = true;
+  currentDetail = null;
+}
+window.closeDetail = closeDetail; // expose for inline onclick
+
+function renderDetailPill(containerId, current, options, placeholder, onSelect) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  const trigger = document.createElement('span');
+  const found = options.find(o => o.val === current);
+  if (found && found.html) {
+    trigger.innerHTML = found.html;
+  } else {
+    trigger.innerHTML = `<span class="pill placeholder" style="opacity:1">${placeholder}</span>`;
+  }
+  trigger.style.cursor = 'pointer';
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    openPopover(trigger.firstElementChild, options.map(o => ({
+      html: o.html, label: o.label,
+      onClick: () => { onSelect(o.val); openDetail(currentDetail.board, currentDetail.id); },
+    })).concat(current ? [{ sep: true }, { label: '清除', onClick: () => { onSelect(null); openDetail(currentDetail.board, currentDetail.id); } }] : []));
+  });
+  c.appendChild(trigger);
+}
+
+function renderDetailDate(containerId, current, onSelect) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  const span = document.createElement('span');
+  span.style.cursor = 'pointer';
+  span.style.padding = '4px 8px';
+  span.style.borderRadius = '3px';
+  span.style.fontSize = '13px';
+  if (current) {
+    span.textContent = `📅 ${formatDateLabel(current)}`;
+    span.style.color = dateState(current) === 'overdue' ? '#d44' :
+                       dateState(current) === 'today'   ? '#2383e2' : 'var(--text)';
+  } else {
+    span.innerHTML = '<span class="pill placeholder" style="opacity:1">＋ 設定日期</span>';
+  }
+  span.addEventListener('click', e => {
+    e.stopPropagation();
+    openPopover(span, [
+      { label: '今天',    onClick: () => { onSelect(todayISO());    openDetail(currentDetail.board, currentDetail.id); } },
+      { label: '明天',    onClick: () => { onSelect(addDaysISO(1)); openDetail(currentDetail.board, currentDetail.id); } },
+      { label: '後天',    onClick: () => { onSelect(addDaysISO(2)); openDetail(currentDetail.board, currentDetail.id); } },
+      { label: '一週後',  onClick: () => { onSelect(addDaysISO(7)); openDetail(currentDetail.board, currentDetail.id); } },
+      { sep: true },
+      { label: '自選日期...', onClick: () => openDatePicker(d => { onSelect(d || null); openDetail(currentDetail.board, currentDetail.id); }, current) },
+      ...(current ? [{ label: '清除', danger: true, onClick: () => { onSelect(null); openDetail(currentDetail.board, currentDetail.id); } }] : []),
+    ]);
+  });
+  c.appendChild(span);
+}
+
+/* ---------- export / reset ---------- */
 document.getElementById('btnExport').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
