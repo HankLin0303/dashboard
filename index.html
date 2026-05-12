@@ -1513,6 +1513,41 @@ function renderGallery(list){
   }).join('')}</div>`;
 }
 
+/* Lay out events for a single day so overlapping ones sit side-by-side.
+   Returns array of {task, startM, endM, colIdx, totalCols}. Greedy interval coloring. */
+function layoutDayEvents(dayEv,HOURS_START){
+  const items=dayEv.map(t=>{
+    const e=new Date(t.eta);
+    const startM=(e.getHours()-HOURS_START)*60+e.getMinutes();
+    const durM=Math.max((t.estHours||1)*60,30); // min 30min visual duration for layout
+    return {task:t,startM,endM:startM+durM};
+  }).sort((a,b)=>a.startM-b.startM||a.endM-b.endM);
+  const result=[];
+  let cluster=[],clusterMaxEnd=-Infinity;
+  function flushCluster(){
+    if(!cluster.length)return;
+    const cols=[]; // last endM per column
+    for(const it of cluster){
+      let placed=false;
+      for(let i=0;i<cols.length;i++){
+        if(cols[i]<=it.startM){it.colIdx=i;cols[i]=it.endM;placed=true;break;}
+      }
+      if(!placed){it.colIdx=cols.length;cols.push(it.endM);}
+    }
+    const totalCols=cols.length;
+    for(const it of cluster){it.totalCols=totalCols;result.push(it);}
+  }
+  for(const it of items){
+    if(!cluster.length||it.startM<clusterMaxEnd){
+      cluster.push(it);clusterMaxEnd=Math.max(clusterMaxEnd,it.endM);
+    }else{
+      flushCluster();cluster=[it];clusterMaxEnd=it.endM;
+    }
+  }
+  flushCluster();
+  return result;
+}
+
 function renderCalendar(){
   const start=startOfWeek(calBaseDate);
   const days=[];for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d);}
@@ -1566,12 +1601,18 @@ function renderCalendar(){
         dayHtml+=`<div class="cal-now-line" style="top:${minFromStart*HOUR_PX/60}px;"><div class="cal-now-dot"></div></div>`;
       }
     }
-    dayEv.forEach((t,i)=>{
-      const e=new Date(t.eta);const startM=(e.getHours()-HOURS_START)*60+e.getMinutes();
-      const dur=(t.estHours||1)*60;const top=startM*HOUR_PX/60;const h=dur*HOUR_PX/60;
-      const col=evColors[(t.id||0)%evColors.length];
+    // Compute side-by-side column layout for overlapping events
+    const laid=layoutDayEvents(dayEv,HOURS_START);
+    laid.forEach(ev=>{
+      const t=ev.task;const e=new Date(t.eta);
+      const top=ev.startM*HOUR_PX/60;const h=(ev.endM-ev.startM)*HOUR_PX/60;
+      const color=evColors[(t.id||0)%evColors.length];
       const cat=CATS.find(c=>c.key===t.category);
-      dayHtml+=`<div class="cal-event ${col}" style="top:${top}px;height:${Math.max(h,28)}px;" onclick="openEdit(${t.id})" title="${esc(t.title)}">
+      // Each event gets 1/totalCols of the day-column width; small gap between cols
+      const widthPct=100/ev.totalCols;
+      const leftPct=widthPct*ev.colIdx;
+      const gap=ev.totalCols>1?1:0; // % gap between columns
+      dayHtml+=`<div class="cal-event ${color}" style="top:${top}px;height:${Math.max(h,28)}px;left:calc(${leftPct}% + 2px);width:calc(${widthPct}% - ${4+gap}px);right:auto;" onclick="openEdit(${t.id})" title="${esc(t.title)}">
         <div class="cal-ev-title">${cat?cat.icon+' ':''}${esc(t.title)}</div>
         <div class="cal-ev-time">${String(e.getHours()).padStart(2,'0')}:${String(e.getMinutes()).padStart(2,'0')}</div>
       </div>`;
