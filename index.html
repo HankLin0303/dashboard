@@ -485,18 +485,17 @@ html,body{overflow-x:hidden}
   padding:0 6px;font-size:.65rem;color:var(--text-3);font-weight:500;transform:translateY(-7px)}
 .cal-day-col{position:relative;border-left:1px solid var(--border);min-height:calc(56px * 13)}
 .cal-hour-line{position:absolute;left:0;right:0;height:1px;background:var(--border)}
-.cal-event{position:absolute;left:2px;right:2px;border-radius:4px;padding:4px 7px;
+.cal-event{position:absolute;border-radius:5px;padding:4px 7px;
   font-size:.72rem;line-height:1.35;overflow:hidden;cursor:pointer;border-left:3px solid;
-  transition:filter .12s,width .15s ease,left .15s ease,box-shadow .15s ease;z-index:2}
-/* Hover: expand to full day-column width so the full title is visible */
+  /* subtle separator between overlapping columns so they don't visually blur together */
+  outline:1px solid var(--bg);outline-offset:-1px;
+  transition:filter .12s, box-shadow .15s ease, transform .12s ease; z-index:2}
+/* Hover: keep dimensions, just lift visually so overlapping events stay readable */
 .cal-event:hover{filter:brightness(1.04);z-index:20;
-  left:2px !important;width:calc(100% - 4px) !important;
-  box-shadow:0 6px 20px rgba(15,15,15,.18)}
+  box-shadow:0 4px 14px rgba(15,15,15,.18); transform:translateY(-1px)}
 .cal-event .cal-ev-title{font-weight:600;
-  /* Wrap to 2 lines, ellipsis after — much more readable than single-line truncation */
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   overflow:hidden;word-break:break-word}
-.cal-event:hover .cal-ev-title{-webkit-line-clamp:unset;white-space:normal}
 .cal-event .cal-ev-time{font-size:.6rem;opacity:.75;margin-top:1px}
 .cal-event.ev-blue{background:var(--accent-soft);border-left-color:var(--accent);color:var(--accent)}
 .cal-event.ev-green{background:var(--green-soft);border-left-color:var(--green);color:var(--green)}
