@@ -581,6 +581,23 @@ html,body{overflow-x:hidden}
   color:#fff;font-size:.82rem;font-weight:600;cursor:pointer}
 .undo-dismiss{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:1rem;padding:0 4px}
 
+/* Triage banner — appears at top of page when there's a new email-triage.json */
+.triage-banner{display:none;align-items:center;gap:12px;padding:12px 18px;
+  background:linear-gradient(135deg,var(--accent-soft),var(--purple-soft));
+  border:1px solid var(--accent);border-radius:12px;margin:20px 0;
+  box-shadow:var(--shadow-sm)}
+.triage-banner.show{display:flex;animation:slideDown .35s ease}
+@keyframes slideDown{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.triage-banner-icon{font-size:1.5rem;flex-shrink:0}
+.triage-banner-text{flex:1;color:var(--text);font-size:.92rem;font-weight:500}
+.triage-banner-text .triage-meta{font-size:.74rem;color:var(--text-2);font-weight:400;margin-top:2px}
+.triage-banner-btn{padding:7px 16px;border:none;border-radius:7px;font-size:.85rem;
+  font-weight:600;cursor:pointer;transition:filter .12s}
+.triage-banner-btn.primary{background:var(--accent);color:#fff}
+.triage-banner-btn.primary:hover{filter:brightness(.9)}
+.triage-banner-btn.ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
+.triage-banner-btn.ghost:hover{background:var(--surface-2);color:var(--text)}
+
 /* Responsive */
 @media(max-width:768px){
   .page{padding:0 18px 60px}
@@ -633,6 +650,17 @@ html,body{overflow-x:hidden}
     <span>目標：今日專注 <strong id="subtitleFocus">0</strong> 件事</span>
     <span class="dot"></span>
     <span title="每天 00:00 後自動清除已完成的過期項目，未完成的逾期項目會保留">🧹 自動清理已啟用</span>
+  </div>
+
+  <!-- Email triage banner (shown when email-triage.json has a new version) -->
+  <div class="triage-banner" id="triageBanner">
+    <span class="triage-banner-icon">📬</span>
+    <div class="triage-banner-text">
+      <div id="triageBannerTitle">新的郵件 triage 已就緒</div>
+      <div class="triage-meta" id="triageBannerMeta"></div>
+    </div>
+    <button class="triage-banner-btn primary" onclick="acceptTriage()">一鍵匯入</button>
+    <button class="triage-banner-btn ghost" onclick="dismissTriage()">略過</button>
   </div>
 
   <!-- Top Widgets -->
@@ -1050,6 +1078,10 @@ function init(){
   setInterval(render,60000);
   // First-load Outlook import
   autoImportOutlookOnce();
+  // Check for new email triage JSON (auto-fetched from repo)
+  checkEmailTriage();
+  // Re-check every 5 minutes — picks up new triage pushes without a refresh
+  setInterval(checkEmailTriage, 5*60*1000);
   // Click anywhere to close dropdown
   document.addEventListener('click',()=>{if(openDD!==null){openDD=null;render();}});
   }catch(err){
@@ -1856,6 +1888,66 @@ function autoImportOutlookOnce(){
   const added=_doImportOutlookMeetings(true);
   localStorage.setItem(KEY,OUTLOOK_DATASET_VERSION);
   if(added>0)setTimeout(()=>showUndo(`📅 已自動匯入 ${added} 個 Outlook 會議`),300);
+}
+
+/* -------- Email triage banner (auto-fetch latest triage JSON) -------- */
+let _triagePending=null; // {version, generatedAt, label, tasks}
+async function checkEmailTriage(){
+  try{
+    // Cache-bust so GitHub Pages CDN doesn't serve stale file
+    const r=await fetch('./email-triage.json?ts='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const data=await r.json();
+    if(!data||!data.version||!Array.isArray(data.tasks)||!data.tasks.length)return;
+    const seen=JSON.parse(localStorage.getItem('dtd_seen_triage_versions')||'[]');
+    if(seen.includes(data.version))return;
+    _triagePending=data;
+    document.getElementById('triageBannerTitle').textContent=
+      `📬 ${data.label||'新郵件 triage'} · ${data.tasks.length} 封信轉成代辦`;
+    const ts=data.generatedAt?new Date(data.generatedAt).toLocaleString('zh-TW',{hour12:false}):'';
+    document.getElementById('triageBannerMeta').textContent=ts?`產生於 ${ts}`:'';
+    document.getElementById('triageBanner').classList.add('show');
+  }catch(e){/* silent: file may not exist yet */}
+}
+function _markTriageSeen(version){
+  const seen=JSON.parse(localStorage.getItem('dtd_seen_triage_versions')||'[]');
+  if(!seen.includes(version)){seen.push(version);if(seen.length>20)seen.shift();
+    localStorage.setItem('dtd_seen_triage_versions',JSON.stringify(seen));}
+}
+function acceptTriage(){
+  if(!_triagePending)return;
+  const seenIds=new Set(tasks.map(t=>t.id));
+  let added=0;
+  _triagePending.tasks.forEach(t=>{
+    // Ensure required fields exist for dashboard schema
+    const task={
+      id:t.id||(Date.now()+Math.random()),
+      title:t.title||'(未命名)',
+      priority:t.priority||'medium',
+      category:t.category||'工作',
+      dueDate:t.dueDate||'',
+      status:t.status||'pending',
+      eta:t.eta||'',
+      difficulty:t.difficulty||'',
+      estHours:Number(t.estHours)||0,
+      actHours:Number(t.actHours)||0,
+      projectId:t.projectId||null,
+      summary:t.summary||'',
+      createdAt:t.createdAt||Date.now(),
+    };
+    if(!seenIds.has(task.id)){tasks.unshift(task);added++;}
+  });
+  if(added>0){save();render();}
+  _markTriageSeen(_triagePending.version);
+  document.getElementById('triageBanner').classList.remove('show');
+  showUndo(`✅ 已從 triage 匯入 ${added} 封郵件任務`);
+  _triagePending=null;
+}
+function dismissTriage(){
+  if(!_triagePending)return;
+  _markTriageSeen(_triagePending.version);
+  document.getElementById('triageBanner').classList.remove('show');
+  _triagePending=null;
 }
 
 /* -------- Boot -------- */
