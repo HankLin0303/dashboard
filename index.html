@@ -589,6 +589,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 <div class="cover">
   <div class="top-toolbar">
     <button class="tb-btn" onclick="toggleTheme()" title="切換主題" id="themeBtn">🌙</button>
+    <button class="tb-btn" onclick="importOutlookMeetings()" title="匯入 Outlook 會議">📅</button>
     <button class="tb-btn" onclick="cleanupNow()" title="立即清理過期已完成項目">🧹</button>
     <button class="tb-btn" onclick="exportData()" title="匯出 JSON 備份">⬇</button>
   </div>
@@ -1641,13 +1642,56 @@ function exportData(){
   a.download=`dtd_backup_${todayStr()}.json`;a.click();
 }
 
-/* -------- Undo toast (kept for any future use) -------- */
+/* -------- Undo toast -------- */
 function showUndo(msg){
   document.getElementById('undoText').textContent=msg;
   document.getElementById('undoToast').classList.add('show');
   clearTimeout(window._undoTimer);window._undoTimer=setTimeout(hideUndo,5000);
 }
 function hideUndo(){document.getElementById('undoToast').classList.remove('show');}
+
+/* -------- Outlook calendar import (data embedded at deploy time) -------- */
+const OUTLOOK_MEETINGS=[{"title":"AIO&GDT core teeam meeting","dueDate":"2026-05-12","eta":"2026-05-12T10:00","estHours":2},{"title":"AIO & GDT core team meeting","dueDate":"2026-05-12","eta":"2026-05-12T11:00","estHours":1},{"title":"[T701TF/TM701TZ/TM700TZ] weekly meeting.","dueDate":"2026-05-12","eta":"2026-05-12T14:00","estHours":1},{"title":"T7/T5 Project Sync","dueDate":"2026-05-12","eta":"2026-05-12T17:00","estHours":0.5},{"title":"Sunny & Hank","dueDate":"2026-05-12","eta":"2026-05-12T18:00","estHours":0.5},{"title":"每日赴盤","dueDate":"2026-05-12","eta":"2026-05-12T18:30","estHours":2},{"title":"CC BU Concept to Kickoff projects -- weekly schedule review meeting","dueDate":"2026-05-13","eta":"2026-05-13T09:30","estHours":1},{"title":"新案子記得按Demantra","dueDate":"2026-05-13","eta":"2026-05-13T10:00","estHours":0.5},{"title":"[GDT] SPM + PMKT Weekly meeting","dueDate":"2026-05-13","eta":"2026-05-13T10:30","estHours":0.5},{"title":"發送weekly announcement 提醒","dueDate":"2026-05-13","eta":"2026-05-13T12:00","estHours":0.5},{"title":"DT/AIO fulfillment mm","dueDate":"2026-05-13","eta":"2026-05-13T14:00","estHours":1},{"title":"[Commercial] APAC Territory sync up meeting","dueDate":"2026-05-13","eta":"2026-05-13T14:00","estHours":2},{"title":"[COMPUTEX 2026] ASUS Booth AI 2nd Brainstorming Meeting","dueDate":"2026-05-13","eta":"2026-05-13T14:00","estHours":2},{"title":"[SPM宣導] 每週三下午六點前上傳 Weekly Announcement","dueDate":"2026-05-13","eta":"2026-05-13T15:00","estHours":0},{"title":"T7/T5 Project Sync","dueDate":"2026-05-13","eta":"2026-05-13T17:00","estHours":0.5},{"title":"Sunny & Hank","dueDate":"2026-05-13","eta":"2026-05-13T18:00","estHours":0.5},{"title":"每日赴盤","dueDate":"2026-05-13","eta":"2026-05-13T18:30","estHours":2},{"title":"Computex 2026 Weekly Meeting - ASUS Booth","dueDate":"2026-05-14","eta":"2026-05-14T14:00","estHours":1},{"title":"【专案】T700MF 重啟 SCH/驗證/認證 ETD評估","dueDate":"2026-05-14","eta":"2026-05-14T15:00","estHours":2},{"title":"[T701TL/T700TL] weekly meeting.","dueDate":"2026-05-14","eta":"2026-05-14T16:00","estHours":2},{"title":"T7/T5 Project Sync","dueDate":"2026-05-14","eta":"2026-05-14T17:00","estHours":0.5},{"title":"Sunny & Hank","dueDate":"2026-05-14","eta":"2026-05-14T18:00","estHours":0.5},{"title":"Gaming DT Weekly meeting","dueDate":"2026-05-18","eta":"2026-05-18T11:00","estHours":0.5},{"title":"CC BU Fulfillment Meeting","dueDate":"2026-05-18","eta":"2026-05-18T16:00","estHours":2},{"title":"T7/T5 Project Sync","dueDate":"2026-05-18","eta":"2026-05-18T17:00","estHours":0.5},{"title":"Sunny & Hank","dueDate":"2026-05-18","eta":"2026-05-18T18:00","estHours":0.5},{"title":"每日赴盤","dueDate":"2026-05-18","eta":"2026-05-18T18:30","estHours":2},{"title":"AIO&GDT core teeam meeting","dueDate":"2026-05-19","eta":"2026-05-19T10:00","estHours":2},{"title":"AIO & GDT core team meeting","dueDate":"2026-05-19","eta":"2026-05-19T11:00","estHours":1},{"title":"[T701TF/TM701TZ/TM700TZ] weekly meeting.","dueDate":"2026-05-19","eta":"2026-05-19T14:00","estHours":1},{"title":"T7/T5 Project Sync","dueDate":"2026-05-19","eta":"2026-05-19T17:00","estHours":0.5},{"title":"Sunny & Hank","dueDate":"2026-05-19","eta":"2026-05-19T18:00","estHours":0.5},{"title":"每日赴盤","dueDate":"2026-05-19","eta":"2026-05-19T18:30","estHours":2},{"title":"CC BU Concept to Kickoff projects -- weekly schedule review meeting","dueDate":"2026-05-20","eta":"2026-05-20T09:30","estHours":1},{"title":"新案子記得按Demantra","dueDate":"2026-05-20","eta":"2026-05-20T10:00","estHours":0.5},{"title":"[GDT] SPM + PMKT Weekly meeting","dueDate":"2026-05-20","eta":"2026-05-20T10:30","estHours":0.5},{"title":"發送weekly announcement 提醒","dueDate":"2026-05-20","eta":"2026-05-20T12:00","estHours":0.5},{"title":"DT/AIO fulfillment mm","dueDate":"2026-05-20","eta":"2026-05-20T14:00","estHours":1},{"title":"[Commercial] APAC Territory sync up meeting","dueDate":"2026-05-20","eta":"2026-05-20T14:00","estHours":2},{"title":"[SPM宣導] 每週三下午六點前上傳 Weekly Announcement","dueDate":"2026-05-20","eta":"2026-05-20T15:00","estHours":0},{"title":"T7/T5 Project Sync","dueDate":"2026-05-20","eta":"2026-05-20T17:00","estHours":0.5},{"title":"Sunny & Hank","dueDate":"2026-05-20","eta":"2026-05-20T18:00","estHours":0.5},{"title":"每日赴盤","dueDate":"2026-05-20","eta":"2026-05-20T18:30","estHours":2},{"title":"Computex 2026 Weekly Meeting - ASUS Booth","dueDate":"2026-05-21","eta":"2026-05-21T14:00","estHours":1}];
+
+function importOutlookMeetings(){
+  if(!confirm(`將匯入 ${OUTLOOK_MEETINGS.length} 個 Outlook 會議 (2026-05-12 到 2026-05-21)。\n已存在的會議會自動跳過。\n\n要繼續嗎?`))return;
+  // Index existing tasks by title+eta for dedupe
+  const exists=new Set(tasks.map(t=>(t.title||'')+'|'+(t.eta||'')));
+  let added=0, skipped=0;
+  const newIds=[];
+  OUTLOOK_MEETINGS.forEach(m=>{
+    const key=m.title+'|'+m.eta;
+    if(exists.has(key)){skipped++;return;}
+    const id=Date.now()+Math.random();
+    newIds.push(id);
+    // Title-based priority guess
+    let priority='medium';
+    if(/每日赴盤|fulfillment|kickoff/i.test(m.title))priority='high';
+    else if(/sync|sunny/i.test(m.title))priority='low';
+    tasks.unshift({
+      id,
+      title:m.title,
+      priority,
+      category:'會議',
+      dueDate:m.dueDate,
+      eta:m.eta,
+      status:'pending',
+      difficulty:'',
+      estHours:m.estHours||0.5,
+      actHours:0,
+      projectId:null,
+      summary:'從 Outlook 匯入',
+      createdAt:Date.now()+Math.random(),
+    });
+    added++;
+  });
+  if(added>0){
+    save();render();
+    showUndo(`✅ 已匯入 ${added} 個會議 · 跳過 ${skipped} 個重複`);
+  }else{
+    showUndo(`沒有新會議要匯入 (全部 ${skipped} 個已存在)`);
+  }
+}
 
 /* -------- Boot -------- */
 loadTheme();
