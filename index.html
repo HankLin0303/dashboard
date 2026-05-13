@@ -838,10 +838,10 @@ html,body{overflow-x:hidden}
     <select id="projectSelect"><option value="">— 關聯專案 —</option></select>
     <input type="date" id="dueDateInput">
     <select id="aiTierSelect" onchange="setSetting('ai_tier',this.value);showUndo('AI 模式 → '+this.options[this.selectedIndex].text);" title="AI 任務模式 — 依任務難度自動挑模型,免費 quota 安全">
-      <option value="auto">🤖 Auto</option>
-      <option value="fast">🚀 Fast</option>
-      <option value="balanced">⚖️ Balanced</option>
-      <option value="smart">🧠 Smart</option>
+      <option value="auto"     title="讓系統依當下任務自動挑最適合的模型,日常使用建議用這個">🤖 自動挑選 (推薦)</option>
+      <option value="fast"     title="文字分類、簡短判斷、快速回答 · 每日約 1000 次 · 用 Flash-Lite 模型">🚀 簡單任務 — 分類/判斷</option>
+      <option value="balanced" title="截圖辨識成代辦、結構化擷取、一般整理 · 每日約 250 次 · 用 Flash 模型">⚖️ 一般任務 — 辨識/整理</option>
+      <option value="smart"    title="多步推理、長文分析、規劃建議、生成總結 · 每日約 100 次 · 用 Pro 模型">🧠 困難任務 — 推理/規劃</option>
     </select>
     <button class="add-ocr-btn" onclick="openOcrModal()" title="從截圖辨識代辦事項 (Gemini Vision)">📷</button>
     <button class="btn-primary" onclick="addTask()">新增</button>
