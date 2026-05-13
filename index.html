@@ -7,6 +7,12 @@
 <meta name="description" content="Notion 風格的每日待辦事項與專案規劃儀表板。支援看板/清單/表格/圖庫/行事曆五種視圖、專案管理、Sprint 追蹤、本週工時統計,所有資料儲存於本機瀏覽器。">
 <meta name="theme-color" content="#2383e2">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✅%3C/text%3E%3C/svg%3E">
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tasks">
 <!-- Open Graph (for sharing on social media) -->
 <meta property="og:title" content="Daily Task Dashboard">
 <meta property="og:description" content="Notion 風格的每日待辦事項與專案規劃儀表板。支援看板/清單/表格/圖庫/行事曆五種視圖。">
@@ -581,6 +587,38 @@ html,body{overflow-x:hidden}
   color:#fff;font-size:.82rem;font-weight:600;cursor:pointer}
 .undo-dismiss{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:1rem;padding:0 4px}
 
+/* === STATS VIEW === */
+.stats-view{display:flex;flex-direction:column;gap:14px}
+.stats-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.stats-grid-2{grid-template-columns:1fr}}
+.stats-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow-sm)}
+.stats-card h3{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.stats-sub{font-size:.72rem;color:var(--text-3);margin-bottom:14px}
+.stats-foot{font-size:.75rem;color:var(--text-2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.bar-chart{display:flex;gap:8px;align-items:flex-end;height:130px;padding-bottom:4px}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.bars{flex:1;width:100%;display:flex;gap:3px;align-items:flex-end;justify-content:center}
+.bar{width:14px;border-radius:3px 3px 0 0;min-height:2px;transition:height .3s}
+.bar.bar-done{background:var(--green)}
+.bar.bar-added{background:var(--text-3);opacity:.4}
+.bar-label{font-size:.65rem;color:var(--text-3);padding-top:2px}
+.bar-label.today{color:var(--orange);font-weight:700}
+.cat-row{display:grid;grid-template-columns:60px 1fr 70px;gap:8px;align-items:center;padding:6px 0;font-size:.82rem}
+.cat-name{color:var(--text)}
+.cat-bar{background:var(--surface-2);height:14px;border-radius:7px;overflow:hidden}
+.cat-fill{height:100%;border-radius:7px;transition:width .4s}
+.cat-num{font-weight:600;text-align:right;font-size:.78rem;color:var(--text-2)}
+.hr-row{display:flex;gap:14px;justify-content:space-around;align-items:baseline}
+.hr-block{flex:1;text-align:center}
+.hr-num{font-size:1.6rem;font-weight:700;line-height:1.1;color:var(--text)}
+.hr-num.purple{color:var(--purple)} .hr-num.green{color:var(--green)} .hr-num.red{color:var(--red)}
+.hr-lbl{font-size:.66rem;color:var(--text-2);margin-top:4px}
+.long-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem}
+.long-row:last-child{border-bottom:none}
+.long-title{flex:1;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
+.long-days{font-weight:600;color:var(--text-2);font-size:.78rem;white-space:nowrap}
+.long-days.orange{color:var(--orange)} .long-days.red{color:var(--red)}
+
 /* Triage banner — appears at top of page when there's a new email-triage.json */
 .triage-banner{display:none;align-items:center;gap:12px;padding:12px 18px;
   background:linear-gradient(135deg,var(--accent-soft),var(--purple-soft));
@@ -626,10 +664,12 @@ html,body{overflow-x:hidden}
 <div class="cover">
   <div class="top-toolbar">
     <button class="tb-btn" onclick="toggleTheme()" title="切換主題" id="themeBtn">🌙</button>
+    <button class="tb-btn" onclick="openOcrModal()" title="截圖 AI 辨識 (Gemini Vision)">📷</button>
     <button class="tb-btn" onclick="importOutlookMeetings()" title="重新匯入 Outlook 會議">📅</button>
     <button class="tb-btn" onclick="cleanupNow()" title="立即清理過期已完成項目">🧹</button>
     <button class="tb-btn" onclick="importDataPrompt()" title="從 JSON 備份匯入">⬆</button>
     <button class="tb-btn" onclick="exportData()" title="匯出 JSON 備份">⬇</button>
+    <button class="tb-btn" onclick="openSettingsModal()" title="設定">⚙</button>
   </div>
 </div>
 
@@ -747,6 +787,7 @@ html,body{overflow-x:hidden}
       <button class="view-tab" data-view="table" onclick="setView('table')">⊞ 表格</button>
       <button class="view-tab" data-view="gallery" onclick="setView('gallery')">🖼 圖庫</button>
       <button class="view-tab" data-view="calendar" onclick="setView('calendar')">📅 行事曆</button>
+      <button class="view-tab" data-view="stats" onclick="setView('stats')">📊 統計</button>
     </div>
   </div>
 
@@ -895,6 +936,81 @@ html,body{overflow-x:hidden}
     <div class="modal-actions">
       <button class="btn-cancel" onclick="document.getElementById('projModal').classList.remove('open')">取消</button>
       <button class="btn-save" onclick="saveProject()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width:520px;">
+    <h3>⚙ 設定</h3>
+    <label>您的名字</label>
+    <input type="text" id="setName" placeholder="例:Hank">
+
+    <label>主題</label>
+    <select id="setTheme">
+      <option value="light">☀ 亮色</option>
+      <option value="dark">🌙 暗色</option>
+    </select>
+
+    <label>預設視圖</label>
+    <select id="setDefaultView">
+      <option value="board">📋 看板</option>
+      <option value="list">≡ 清單</option>
+      <option value="table">⊞ 表格</option>
+      <option value="gallery">🖼 圖庫</option>
+      <option value="calendar">📅 行事曆</option>
+      <option value="stats">📊 統計</option>
+    </select>
+
+    <label>新任務預設分類</label>
+    <select id="setDefaultCategory">
+      <option value="工作">💼 工作</option>
+      <option value="會議">📅 會議</option>
+      <option value="個人">🏠 個人</option>
+      <option value="學習">📚 學習</option>
+      <option value="其他">📌 其他</option>
+    </select>
+
+    <label>Gemini API Key <span style="font-weight:400;color:var(--text-3);">— 截圖辨識用 (免費,1500 req/day)</span></label>
+    <input type="password" id="setGeminiKey" placeholder="AIza...">
+    <div class="helper-text">
+      到 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a> 申請 (不需要信用卡)。Key 只存在您本機 localStorage。
+    </div>
+
+    <label>Outlook 會議自動匯入</label>
+    <select id="setAutoOutlook">
+      <option value="1">✅ 開啟 (每次新版本自動匯入)</option>
+      <option value="0">❌ 關閉 (只靠 📅 按鈕手動匯入)</option>
+    </select>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('settingsModal').classList.remove('open')">取消</button>
+      <button class="btn-save" onclick="saveSettingsModal()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- OCR Modal (Gemini Vision) -->
+<div class="modal-overlay" id="ocrModal">
+  <div class="modal" style="max-width:600px;">
+    <h3>📷 截圖辨識 (Gemini Vision)</h3>
+    <div id="ocrNoKey" style="display:none;padding:14px;background:var(--red-soft);border:1px solid var(--red);border-radius:8px;color:var(--red);margin-bottom:12px;font-size:.88rem;">
+      ⚠ 需要 Gemini API Key — 點右上 ⚙ 設定填入即可開始使用
+    </div>
+    <div id="ocrDrop" style="border:2px dashed var(--border-2);border-radius:10px;padding:30px;text-align:center;color:var(--text-2);cursor:pointer;background:var(--surface-2);">
+      <div style="font-size:2rem;">📋</div>
+      <div style="margin-top:8px;font-size:.92rem;">把截圖拖進來、按 <kbd style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:.75rem;">Ctrl+V</kbd> 貼上,或點此選檔</div>
+      <input type="file" id="ocrFile" accept="image/*" style="display:none;">
+    </div>
+    <div id="ocrPreview" style="display:none;margin-top:12px;text-align:center;">
+      <img id="ocrPreviewImg" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border);">
+    </div>
+    <div id="ocrStatus" style="display:none;margin-top:12px;padding:10px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:.85rem;"></div>
+    <div id="ocrResult" style="display:none;margin-top:12px;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeOcrModal()">關閉</button>
+      <button class="btn-save" id="ocrAnalyzeBtn" onclick="analyzeOcrImage()" disabled>🧠 開始辨識</button>
     </div>
   </div>
 </div>
@@ -1061,9 +1177,13 @@ function init(){
   render();
   startClock();
   setInterval(render,60000);
-  // Auto-import Outlook meetings (as type='meeting', they show in the calendar view only —
-  // they will NOT pollute the todo board/list/table/gallery).
-  autoImportOutlookOnce();
+  // Apply user settings (default view / category)
+  const defView=localStorage.getItem('dtd_default_view');
+  if(defView&&defView!==currentView)setView(defView,true);
+  const defCat=localStorage.getItem('dtd_default_category');
+  if(defCat)document.getElementById('categorySelect').value=defCat;
+  // Auto-import Outlook meetings only if the user hasn't disabled it
+  if(localStorage.getItem('dtd_auto_outlook')!=='0')autoImportOutlookOnce();
   // Check for new email triage JSON (auto-fetched from repo)
   checkEmailTriage();
   // Re-check every 5 minutes — picks up new triage pushes without a refresh
@@ -1300,12 +1420,29 @@ function renderProjects(){
 function toggleProj(){document.getElementById('projToggle').classList.toggle('open');}
 
 /* -------- Tasks CRUD -------- */
+/* Smart category — infer from title keywords. Used when the user hasn't
+   explicitly changed the category select away from its current value. */
+function inferCategory(title){
+  const s=(title||'').toLowerCase();
+  if(/meeting|會議|sync|kickoff|review|1:1|standup|赴盤|簡報|對齊|kick-off|stand-up|all hands/.test(s))return '會議';
+  if(/讀|看書|閱讀|學|study|book|course|tutorial|教學|練習|english|英文|日文|japanese|coursera|udemy/.test(s))return '學習';
+  if(/運動|健身|跑步|游泳|健身房|家庭|家人|旅行|理財|冥想|料理|早睡|繳費|帳單|生日|預約|gym|exercise|workout|family/.test(s))return '個人';
+  if(/工作|報告|交付|deadline|專案|客戶|提案|報價|kpi|okr|主管|同事|pr\b|bug|deploy|fcst|bom|launch|gtm|spec|ramp|approval|sign-?off/.test(s))return '工作';
+  return null; // null = let caller fall back to the select's chosen value
+}
 function addTask(){
   const inp=document.getElementById('taskInput'),title=inp.value.trim();if(!title)return;
   const projVal=document.getElementById('projectSelect').value;
+  // Smart category: if the user left the select at its current value, try to infer from title.
+  // The select default is '工作' so we only override when inference picks something else AND
+  // the user didn't manually change the dropdown (we approximate by reading current value).
+  const selCat=document.getElementById('categorySelect').value;
+  const inferred=inferCategory(title);
+  const category=(inferred&&selCat==='工作')?inferred:selCat;
   tasks.unshift({id:Date.now(),title,
+    type:'task',
     priority:document.getElementById('prioritySelect').value,
-    category:document.getElementById('categorySelect').value,
+    category,
     dueDate:document.getElementById('dueDateInput').value,
     status:'pending',eta:'',
     difficulty:document.getElementById('difficultySelect').value,
@@ -1696,6 +1833,111 @@ function navWeek(d){
   else{const x=new Date(calBaseDate);x.setDate(x.getDate()+d*7);calBaseDate=x;}
   render();
 }
+
+/* -------- Stats view (tasks only — meetings live in calendar) -------- */
+function renderStats(){
+  const T=taskOnly();
+  // 7-day completion trend (last 7 days incl today)
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const label=(d.getMonth()+1)+'/'+d.getDate();
+    const done=T.filter(t=>t.status==='completed'&&t.dueDate===ds).length;
+    const added=T.filter(t=>{
+      const c=new Date(t.createdAt||0);const cs=c.getFullYear()+'-'+String(c.getMonth()+1).padStart(2,'0')+'-'+String(c.getDate()).padStart(2,'0');
+      return cs===ds;
+    }).length;
+    days.push({ds,label,done,added,isToday:ds===todayStr()});
+  }
+  const maxBar=Math.max(1,...days.flatMap(d=>[d.done,d.added]));
+
+  // Category breakdown
+  const catCounts={};
+  T.forEach(t=>{catCounts[t.category||'其他']=(catCounts[t.category||'其他']||0)+1;});
+  const catList=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);
+  const totalCat=catList.reduce((s,[,n])=>s+n,0)||1;
+  const catColors={'工作':'var(--accent)','會議':'var(--purple)','個人':'var(--green)','學習':'var(--orange)','其他':'var(--text-3)'};
+
+  // Top 5 longest in-progress
+  const inProgress=T.filter(t=>getStatus(t)==='in_progress')
+    .map(t=>{
+      const start=new Date(t.createdAt||Date.now());
+      const days=Math.floor((Date.now()-start)/86400000);
+      return {t,days};
+    })
+    .sort((a,b)=>b.days-a.days).slice(0,5);
+
+  // Estimate vs Actual hours (this week)
+  const now=new Date();const ws=startOfWeek(now);const we=new Date(ws);we.setDate(we.getDate()+7);
+  const inWeek=T.filter(t=>{
+    if(t.dueDate){const d=new Date(t.dueDate+'T00:00:00');return d>=ws&&d<we;}
+    return false;
+  });
+  const wEst=inWeek.reduce((s,t)=>s+(parseFloat(t.estHours)||0),0);
+  const wAct=inWeek.reduce((s,t)=>s+(parseFloat(t.actHours)||0),0);
+  const wDelta=wAct-wEst;
+
+  // Compose HTML
+  return `<div class="stats-view">
+    <div class="stats-grid-2">
+      <div class="stats-card">
+        <h3>📈 過去 7 天</h3>
+        <div class="stats-sub">綠色 = 完成 · 灰色 = 新增</div>
+        <div class="bar-chart">${days.map(d=>{
+          const dh=Math.round((d.done/maxBar)*100);
+          const ah=Math.round((d.added/maxBar)*100);
+          return `<div class="bar-group" title="${d.label} · 完成 ${d.done} / 新增 ${d.added}">
+            <div class="bars">
+              <div class="bar bar-added" style="height:${ah}%"></div>
+              <div class="bar bar-done" style="height:${dh}%"></div>
+            </div>
+            <div class="bar-label ${d.isToday?'today':''}">${d.label}</div>
+          </div>`;
+        }).join('')}</div>
+        <div class="stats-foot">
+          完成共 <strong>${days.reduce((s,d)=>s+d.done,0)}</strong> · 新增共 <strong>${days.reduce((s,d)=>s+d.added,0)}</strong>
+        </div>
+      </div>
+
+      <div class="stats-card">
+        <h3>🎨 類別分布</h3>
+        <div class="stats-sub">總計 ${totalCat} 個任務</div>
+        ${catList.length?catList.map(([k,n])=>{
+          const pct=Math.round(n/totalCat*100);
+          return `<div class="cat-row">
+            <div class="cat-name">${esc(k)}</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:${pct}%;background:${catColors[k]||'var(--text-3)'};"></div></div>
+            <div class="cat-num">${n} <span style="color:var(--text-3);">(${pct}%)</span></div>
+          </div>`;
+        }).join(''):'<div style="color:var(--text-3);padding:14px;text-align:center;">尚無任務</div>'}
+      </div>
+    </div>
+
+    <div class="stats-grid-2">
+      <div class="stats-card">
+        <h3>⏱ 本週工時</h3>
+        <div class="hr-row">
+          <div class="hr-block"><div class="hr-num purple">${wEst.toFixed(1)}</div><div class="hr-lbl">估計 hr</div></div>
+          <div class="hr-block"><div class="hr-num green">${wAct.toFixed(1)}</div><div class="hr-lbl">實際 hr</div></div>
+          <div class="hr-block"><div class="hr-num ${wDelta>0?'red':wDelta<0?'green':''}">${wDelta>=0?'+':''}${wDelta.toFixed(1)}</div><div class="hr-lbl">差距</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:.78rem;color:var(--text-2);line-height:1.5;">
+          ${wEst===0?'本週無估計時間':wAct===0?'本週尚未記錄實際時間':wDelta>0?'⚠ 實際比估計多 '+wDelta.toFixed(1)+' 小時':wDelta<0?'✅ 比預期省了 '+(-wDelta).toFixed(1)+' 小時':'完全準確 🎯'}
+        </div>
+      </div>
+
+      <div class="stats-card">
+        <h3>🐌 進行中最久 Top 5</h3>
+        <div class="stats-sub">建議盡快收尾或重設優先度</div>
+        ${inProgress.length?inProgress.map(({t,days})=>`<div class="long-row">
+          <div class="long-title">${esc(t.title)}</div>
+          <div class="long-days ${days>=7?'red':days>=3?'orange':''}">${days} 天</div>
+        </div>`).join(''):'<div style="color:var(--text-3);padding:14px;text-align:center;">沒有進行中任務 🎉</div>'}
+      </div>
+    </div>
+  </div>`;
+}
 function navWeekTo(dateStr){
   if(!dateStr)return;
   // dateStr is YYYY-MM-DD; build as local noon to avoid TZ edge cases
@@ -1763,6 +2005,7 @@ function render(){
   else if(currentView==='table')c.innerHTML=renderTable(filtered);
   else if(currentView==='gallery')c.innerHTML=renderGallery(filtered);
   else if(currentView==='calendar')c.innerHTML=renderCalendar();
+  else if(currentView==='stats')c.innerHTML=renderStats();
 }
 
 /* -------- Export -------- */
@@ -1956,6 +2199,232 @@ function dismissTriage(){
   _markTriageSeen(_triagePending.version);
   document.getElementById('triageBanner').classList.remove('show');
   _triagePending=null;
+}
+
+/* -------- OCR (Gemini Vision) -------- */
+let _ocrImageData=null; // base64 of pasted/dropped/uploaded image (no data: prefix)
+let _ocrMimeType='image/png';
+
+function openOcrModal(){
+  _ocrImageData=null;_ocrMimeType='image/png';
+  document.getElementById('ocrPreview').style.display='none';
+  document.getElementById('ocrPreviewImg').src='';
+  document.getElementById('ocrStatus').style.display='none';
+  document.getElementById('ocrResult').style.display='none';
+  document.getElementById('ocrResult').innerHTML='';
+  document.getElementById('ocrAnalyzeBtn').disabled=true;
+  document.getElementById('ocrNoKey').style.display=getSetting('gemini_key','')?'none':'block';
+  document.getElementById('ocrModal').classList.add('open');
+  // Ensure listeners attached only once
+  setupOcrListenersOnce();
+}
+function closeOcrModal(){
+  document.getElementById('ocrModal').classList.remove('open');
+}
+
+let _ocrListenersAttached=false;
+function setupOcrListenersOnce(){
+  if(_ocrListenersAttached)return;
+  _ocrListenersAttached=true;
+  const drop=document.getElementById('ocrDrop');
+  const file=document.getElementById('ocrFile');
+  drop.addEventListener('click',()=>file.click());
+  file.addEventListener('change',e=>{
+    const f=e.target.files&&e.target.files[0];if(f)readOcrFile(f);
+  });
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{
+    e.preventDefault();drop.style.background='var(--accent-soft)';drop.style.borderColor='var(--accent)';
+  }));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{
+    e.preventDefault();drop.style.background='var(--surface-2)';drop.style.borderColor='var(--border-2)';
+  }));
+  drop.addEventListener('drop',e=>{
+    const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))readOcrFile(f);
+  });
+  // Paste anywhere while modal open
+  window.addEventListener('paste',e=>{
+    if(!document.getElementById('ocrModal').classList.contains('open'))return;
+    const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    for(const it of items){
+      if(it.type&&it.type.startsWith('image/')){
+        const f=it.getAsFile();if(f){readOcrFile(f);break;}
+      }
+    }
+  });
+}
+function readOcrFile(f){
+  _ocrMimeType=f.type||'image/png';
+  const r=new FileReader();
+  r.onload=ev=>{
+    const dataUrl=ev.target.result;
+    const i=dataUrl.indexOf('base64,');
+    _ocrImageData=i>=0?dataUrl.slice(i+7):dataUrl;
+    document.getElementById('ocrPreviewImg').src=dataUrl;
+    document.getElementById('ocrPreview').style.display='block';
+    document.getElementById('ocrAnalyzeBtn').disabled=!getSetting('gemini_key','');
+  };
+  r.readAsDataURL(f);
+}
+async function analyzeOcrImage(){
+  const key=getSetting('gemini_key','');
+  if(!key){alert('請先到 ⚙ 設定填入 Gemini API Key');return;}
+  if(!_ocrImageData){alert('請先選或貼一張圖');return;}
+  const statusEl=document.getElementById('ocrStatus');
+  const resultEl=document.getElementById('ocrResult');
+  statusEl.style.display='block';statusEl.textContent='🧠 Gemini 辨識中...';
+  resultEl.style.display='none';resultEl.innerHTML='';
+  document.getElementById('ocrAnalyzeBtn').disabled=true;
+  try{
+    const today=todayStr();
+    const prompt=`你是一個生產力助理。請從這張截圖擷取所有可以變成「待辦事項」的條目。
+今天日期: ${today} (台北時區)
+
+對每一條輸出 JSON 物件,結構:
+{
+  "title": "簡潔、可行動的描述 (不要含時間或標籤)",
+  "category": "工作" | "會議" | "個人" | "學習" | "其他",
+  "priority": "high" | "medium" | "low",
+  "dueDate": "YYYY-MM-DD" 或 "",
+  "eta": "YYYY-MM-DDTHH:MM" 或 "" (僅在有明確時間時填)
+}
+
+分類規則:
+- 會議: 有時間 + 人/部門/主題的會議活動
+- 工作: 工作任務、報告、客戶、專案、deadline、回信、申請
+- 個人: 運動、健身、家庭、財務、生活、購物、預約
+- 學習: 閱讀、課程、教學、研究
+- 其他: 上述以外
+
+優先度:
+- high: 含 緊急/重要/urgent/ASAP/今天必/deadline
+- low: 含 有空/順便/閒暇/later
+- medium: 預設
+
+只輸出 JSON 陣列,不要任何前後文字或 markdown。範例:
+[{"title":"回客戶 A 報價信","category":"工作","priority":"high","dueDate":"${today}","eta":""}]`;
+    const body={
+      contents:[{parts:[
+        {text:prompt},
+        {inline_data:{mime_type:_ocrMimeType,data:_ocrImageData}}
+      ]}],
+      generationConfig:{responseMimeType:'application/json',temperature:0.2}
+    };
+    // Model fallback chain (following article's pattern)
+    const MODELS=['gemini-2.0-flash-exp','gemini-2.0-flash-001','gemini-1.5-flash'];
+    let json=null,lastErr=null;
+    for(const model of MODELS){
+      try{
+        const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+        const resp=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+        if(!resp.ok){lastErr=`HTTP ${resp.status}: ${(await resp.text()).slice(0,200)}`;continue;}
+        json=await resp.json();statusEl.textContent=`✅ Gemini ${model} 辨識完成`;break;
+      }catch(e){lastErr=e.message;}
+    }
+    if(!json)throw new Error('All models failed. Last error: '+lastErr);
+    const text=json.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const arr=parseOcrJson(text);
+    if(!arr.length){throw new Error('Gemini 沒回任何項目');}
+    renderOcrSuggestions(arr);
+  }catch(e){
+    statusEl.style.background='var(--red-soft)';statusEl.style.color='var(--red)';
+    statusEl.textContent='❌ 辨識失敗: '+(e.message||e);
+    document.getElementById('ocrAnalyzeBtn').disabled=false;
+  }
+}
+function parseOcrJson(text){
+  // Gemini returns pure JSON when responseMimeType set, but be defensive
+  try{const a=JSON.parse(text);return Array.isArray(a)?a:[];}catch{}
+  const m=text.match(/\[[\s\S]*\]/);if(!m)return [];
+  try{return JSON.parse(m[0]);}catch{return [];}
+}
+function renderOcrSuggestions(items){
+  const el=document.getElementById('ocrResult');
+  el.style.display='block';
+  el.innerHTML=`<div style="font-size:.8rem;color:var(--text-2);margin-bottom:8px;">辨識到 ${items.length} 個項目,點選要加入的:</div>` +
+    items.map((it,i)=>{
+      const t=esc(it.title||'');
+      const c=esc(it.category||'工作');
+      const p=it.priority||'medium';
+      const d=esc(it.dueDate||'');
+      const e=esc(it.eta||'');
+      return `<div class="ocr-sugg" style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;border:1px solid var(--border);margin-bottom:6px;background:var(--surface);">
+        <input type="checkbox" data-i="${i}" checked style="margin:0;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:500;font-size:.88rem;">${t}</div>
+          <div style="font-size:.7rem;color:var(--text-3);margin-top:2px;">${c} · ${p}${d?' · '+d:''}${e?' · '+e:''}</div>
+        </div>
+      </div>`;
+    }).join('') +
+    `<button class="btn-save" style="width:100%;margin-top:8px;" onclick="acceptOcrSuggestions(${JSON.stringify(items).replace(/"/g,'&quot;')})">＋ 加入勾選的項目</button>`;
+  document.getElementById('ocrAnalyzeBtn').disabled=false;
+}
+function acceptOcrSuggestions(items){
+  const checks=document.querySelectorAll('#ocrResult input[type=checkbox]');
+  let added=0;
+  checks.forEach(cb=>{
+    if(!cb.checked)return;
+    const it=items[parseInt(cb.dataset.i)];
+    if(!it||!it.title)return;
+    tasks.unshift({
+      id:Date.now()+Math.random(),title:it.title,type:'task',
+      priority:it.priority||'medium',
+      category:it.category||'工作',
+      dueDate:it.dueDate||'',status:'pending',eta:it.eta||'',
+      difficulty:'',estHours:0,actHours:0,projectId:null,
+      summary:'從 Gemini 辨識',createdAt:Date.now()+Math.random()
+    });
+    added++;
+  });
+  if(added>0){save();render();}
+  closeOcrModal();
+  showUndo(`📷 已從截圖加入 ${added} 個代辦`);
+}
+
+/* -------- Settings modal -------- */
+function getSetting(k,fallback){try{return localStorage.getItem('dtd_'+k)??fallback;}catch{return fallback;}}
+function setSetting(k,v){try{localStorage.setItem('dtd_'+k,v);}catch{}}
+
+function openSettingsModal(){
+  document.getElementById('setName').value=userName||'';
+  document.getElementById('setTheme').value=document.documentElement.getAttribute('data-theme')||'light';
+  document.getElementById('setDefaultView').value=getSetting('default_view','board');
+  document.getElementById('setDefaultCategory').value=getSetting('default_category','工作');
+  document.getElementById('setGeminiKey').value=getSetting('gemini_key','');
+  document.getElementById('setAutoOutlook').value=getSetting('auto_outlook','1');
+  document.getElementById('settingsModal').classList.add('open');
+}
+function saveSettingsModal(){
+  // Name
+  const newName=document.getElementById('setName').value.trim();
+  if(newName&&newName!==userName){
+    userName=newName;localStorage.setItem('dtd_username',userName);
+    document.getElementById('titleName').textContent=userName;
+    document.title=userName+' Daily Task Dashboard';
+  }
+  // Theme
+  const theme=document.getElementById('setTheme').value;
+  document.documentElement.setAttribute('data-theme',theme);
+  localStorage.setItem('dtd_theme',theme);
+  document.getElementById('themeBtn').textContent=theme==='dark'?'☀':'🌙';
+  // Default view
+  setSetting('default_view',document.getElementById('setDefaultView').value);
+  // Default category — sync to categorySelect's order so future addTask uses it
+  const defCat=document.getElementById('setDefaultCategory').value;
+  setSetting('default_category',defCat);
+  document.getElementById('categorySelect').value=defCat;
+  // Gemini key
+  setSetting('gemini_key',document.getElementById('setGeminiKey').value.trim());
+  // Outlook auto-import toggle
+  setSetting('auto_outlook',document.getElementById('setAutoOutlook').value);
+  document.getElementById('settingsModal').classList.remove('open');
+  showUndo('⚙ 設定已儲存');
+}
+
+/* -------- PWA service worker registration -------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('SW register failed',err));
+  });
 }
 
 /* -------- Boot -------- */
