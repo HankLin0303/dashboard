@@ -1026,26 +1026,9 @@ function init(){
   // Load projects
   let sp=null;try{sp=localStorage.getItem('dtd_projects');}catch(e){}
   if(sp){try{projects=JSON.parse(sp);}catch(e){projects=[];}}
-  // Default seed if first run
-  if(!tasks.length){
-    const n=Date.now();
-    tasks=[
-      {id:n,title:'查看今日郵件並回覆重要信件',priority:'high',category:'工作',dueDate:todayStr(),status:'pending',eta:'',difficulty:'normal',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
-      {id:n+1,title:'完成 Q2 季度報告',priority:'medium',category:'工作',dueDate:todayStr(),status:'pending',eta:'',difficulty:'hard',estHours:3,actHours:0,projectId:null,summary:'',createdAt:n},
-      {id:n+2,title:'部門會議',priority:'high',category:'會議',dueDate:todayStr(),status:'pending',eta:'',difficulty:'easy',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
-      {id:n+3,title:'1-on-1 與主管面談',priority:'medium',category:'會議',dueDate:'',status:'pending',eta:'',difficulty:'easy',estHours:0.5,actHours:0,projectId:null,summary:'',createdAt:n},
-      {id:n+4,title:'繳信用卡帳單',priority:'high',category:'個人',dueDate:todayStr(),status:'pending',eta:'',difficulty:'easy',estHours:0.5,actHours:0,projectId:null,summary:'',createdAt:n},
-      {id:n+5,title:'健身房運動',priority:'low',category:'個人',dueDate:'',status:'pending',eta:'',difficulty:'normal',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
-      {id:n+6,title:'閱讀 AI 技術文章',priority:'low',category:'學習',dueDate:'',status:'pending',eta:'',difficulty:'easy',estHours:1,actHours:0,projectId:null,summary:'',createdAt:n},
-    ];
-  }
-  // Default project if first run
-  if(!projects.length){
-    projects=[
-      {id:Date.now()+9001,name:'Q2 業績達標',urgency:'urgent',dueDate:'',description:'達成本季 KPI、完成所有里程碑',createdAt:Date.now()},
-      {id:Date.now()+9002,name:'個人健身計畫',urgency:'normal',dueDate:'',description:'每週運動 3 次、體重維持',createdAt:Date.now()},
-    ];
-  }
+  // No more default seeding — start blank for new users.
+  // Existing users' default rows get cleaned up by purgeDefaultsOnce() below.
+  purgeDefaultsOnce();
   // Migration: ensure new fields
   tasks.forEach(t=>{
     if(!t.status)t.status=t.completed?'completed':'pending';
@@ -1061,8 +1044,6 @@ function init(){
   if(ui){try{const s=JSON.parse(ui);if(s.view)currentView=s.view;if(s.filter)currentFilter=s.filter;}catch(e){}}
   // Notes
   document.getElementById('notesArea').value=localStorage.getItem('dtd_notes')||'';
-  // Seed sample calendar (kept for parity with previous version)
-  seedCalendarMay2026();
   // Initial render
   // Run daily cleanup if a new day has begun since last visit
   dailyCleanup(true);
@@ -1092,36 +1073,45 @@ function init(){
   }
 }
 
-/* -------- One-time seed (kept for compatibility) -------- */
-function seedCalendarMay2026(){
-  if(localStorage.getItem('dtd_seed_may2026'))return;
-  const n=Date.now();
-  const cal=[
-    {title:'情境照拍攝 Day1（台北市內湖區）',category:'工作',priority:'high',dueDate:'2026-05-04',eta:'2026-05-04T18:00'},
-    {title:'AIO&GDT core team meeting（立功會議室 A17）',category:'會議',priority:'high',dueDate:'2026-05-04',eta:'2026-05-04T10:00'},
-    {title:'Gaming Cz',category:'工作',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T11:00'},
-    {title:'CC BU Fulfillment Meeting - Betty Chi',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T17:00'},
-    {title:'T7/T5 Project Sync',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T17:00'},
-    {title:'Sunny & Hank teams sync',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T18:00'},
-    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-04',eta:'2026-05-04T19:00'},
-    {title:'AIO & GDT cc',category:'會議',priority:'medium',dueDate:'2026-05-05',eta:'2026-05-05T10:00'},
-    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-05',eta:'2026-05-05T19:00'},
-    {title:'CC BU Concept to - Benny Liu',category:'會議',priority:'high',dueDate:'2026-05-06',eta:'2026-05-06T10:00'},
-    {title:'發送 weekly announcement 提醒',category:'工作',priority:'medium',dueDate:'2026-05-06',eta:'2026-05-06T12:00'},
-    {title:'DT/AIO fulfillment meeting',category:'會議',priority:'medium',dueDate:'2026-05-06',eta:'2026-05-06T15:00'},
-    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-06',eta:'2026-05-06T19:00'},
-    {title:'Computex 2026 會議 - Sandy4 Chen',category:'會議',priority:'high',dueDate:'2026-05-07',eta:'2026-05-07T14:00'},
-    {title:'T7/T5 Project Sync - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-07',eta:'2026-05-07T17:00'},
-    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-07',eta:'2026-05-07T19:00'},
-    {title:'CC BU and MDM sync up - Jim2 Wang',category:'會議',priority:'medium',dueDate:'2026-05-08',eta:'2026-05-08T10:00'},
-    {title:'每日赴盤 - HankHH Lin',category:'會議',priority:'medium',dueDate:'2026-05-08',eta:'2026-05-08T19:00'},
-  ];
-  cal.forEach((it,i)=>{
-    tasks.push({id:n+100+i,title:it.title,priority:it.priority,category:it.category,
-      dueDate:it.dueDate,status:'pending',eta:it.eta,difficulty:'',estHours:1,actHours:0,
-      projectId:null,summary:'',createdAt:n+100+i});
+/* -------- One-time cleanup of legacy default seed data --------
+   Removes the 7 default daily tasks + 2 default projects + the 5/4-5/8 sample calendar
+   events that used to be auto-seeded on first run. Outlook-imported meetings and any
+   user-created tasks are NOT touched (we match exact titles + dates only). */
+function purgeDefaultsOnce(){
+  const KEY='dtd_defaults_purged_v1';
+  if(localStorage.getItem(KEY))return 0;
+  const DEFAULT_TASK_TITLES=new Set([
+    '查看今日郵件並回覆重要信件','完成 Q2 季度報告','部門會議',
+    '1-on-1 與主管面談','繳信用卡帳單','健身房運動','閱讀 AI 技術文章'
+  ]);
+  const CAL_SEED_TITLES=new Set([
+    '情境照拍攝 Day1（台北市內湖區）','AIO&GDT core team meeting（立功會議室 A17）','Gaming Cz',
+    'CC BU Fulfillment Meeting - Betty Chi','T7/T5 Project Sync','Sunny & Hank teams sync',
+    '每日赴盤 - HankHH Lin','AIO & GDT cc','CC BU Concept to - Benny Liu',
+    '發送 weekly announcement 提醒','DT/AIO fulfillment meeting','Computex 2026 會議 - Sandy4 Chen',
+    'T7/T5 Project Sync - HankHH Lin','CC BU and MDM sync up - Jim2 Wang'
+  ]);
+  const SEED_DATES=new Set(['2026-05-04','2026-05-05','2026-05-06','2026-05-07','2026-05-08']);
+  const DEFAULT_PROJ_NAMES=new Set(['Q2 業績達標','個人健身計畫']);
+  const before=tasks.length;
+  tasks=tasks.filter(t=>{
+    // Skip if it's an Outlook import (different summary marker)
+    if(t.summary==='從 Outlook 匯入')return true;
+    // Daily seed tasks: exact title match (any date)
+    if(DEFAULT_TASK_TITLES.has(t.title))return false;
+    // Calendar seed events: exact title + within 5/4-5/8 range
+    if(CAL_SEED_TITLES.has(t.title)&&SEED_DATES.has(t.dueDate))return false;
+    return true;
   });
-  save();localStorage.setItem('dtd_seed_may2026','1');
+  const projBefore=projects.length;
+  projects=projects.filter(p=>!DEFAULT_PROJ_NAMES.has(p.name));
+  const removed=before-tasks.length;
+  const projRemoved=projBefore-projects.length;
+  // Always mark done so we don't re-run, and block legacy seedCalendarMay2026 just in case
+  localStorage.setItem(KEY,String(Date.now()));
+  localStorage.setItem('dtd_seed_may2026','1');
+  if(removed>0||projRemoved>0){save();}
+  return removed;
 }
 
 function save(){
