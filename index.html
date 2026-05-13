@@ -2339,8 +2339,8 @@ async function analyzeOcrImage(){
       ]}],
       generationConfig:{responseMimeType:'application/json',temperature:0.2}
     };
-    // Model fallback chain (following article's pattern)
-    const MODELS=['gemini-2.0-flash-exp','gemini-2.0-flash-001','gemini-1.5-flash'];
+    // Model fallback chain (2026-05 — older names like 2.0-flash-exp / 1.5-flash were retired)
+    const MODELS=['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'];
     let json=null,lastErr=null;
     for(const model of MODELS){
       try{
