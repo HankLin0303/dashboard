@@ -265,6 +265,10 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .add-bar select,.add-bar input[type=date]{padding:7px 10px;background:var(--surface-2);
   border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:.8rem;
   outline:none;cursor:pointer}
+.add-ocr-btn{width:36px;height:34px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:7px;color:var(--text);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .12s}
+.add-ocr-btn:hover{background:var(--accent-soft);border-color:var(--accent);transform:scale(1.05)}
 .add-bar input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0)}
 [data-theme="dark"] .add-bar input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 
@@ -803,7 +807,7 @@ html,body{overflow-x:hidden}
 
   <!-- Add bar -->
   <div class="add-bar">
-    <input type="text" id="taskInput" placeholder="＋ 新增待辦事項..." onkeydown="if(event.key==='Enter')addTask()">
+    <input type="text" id="taskInput" placeholder="＋ 新增待辦事項... (或按 Ctrl+V 貼截圖讓 AI 辨識)" onkeydown="if(event.key==='Enter')addTask()" onpaste="handleTaskInputPaste(event)">
     <select id="prioritySelect">
       <option value="medium">⚡ 中優先</option>
       <option value="high">🔴 高優先</option>
@@ -833,6 +837,7 @@ html,body{overflow-x:hidden}
     </select>
     <select id="projectSelect"><option value="">— 關聯專案 —</option></select>
     <input type="date" id="dueDateInput">
+    <button class="add-ocr-btn" onclick="openOcrModal()" title="從截圖辨識代辦事項 (Gemini Vision)">📷</button>
     <button class="btn-primary" onclick="addTask()">新增</button>
   </div>
 
@@ -2199,6 +2204,31 @@ function dismissTriage(){
   _markTriageSeen(_triagePending.version);
   document.getElementById('triageBanner').classList.remove('show');
   _triagePending=null;
+}
+
+/* Paste handler on the task input — if user pastes an image, open OCR modal
+   with that image and trigger analysis immediately. Falls through to normal
+   text paste behavior if clipboard has no image. */
+function handleTaskInputPaste(ev){
+  const items=ev.clipboardData&&ev.clipboardData.items;
+  if(!items)return;
+  for(const it of items){
+    if(it.type&&it.type.startsWith('image/')){
+      ev.preventDefault();
+      const f=it.getAsFile();
+      if(!f)return;
+      // Open the modal first so listeners exist & UI shows
+      openOcrModal();
+      // Inject the image directly (bypass the file picker UX)
+      readOcrFile(f);
+      // Auto-analyze after the modal & image preview are in DOM
+      setTimeout(()=>{
+        if(getSetting('gemini_key','')) analyzeOcrImage();
+      },350);
+      return;
+    }
+  }
+  // No image — let the default paste continue
 }
 
 /* -------- OCR (Gemini Vision) -------- */
