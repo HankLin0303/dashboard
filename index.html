@@ -1029,7 +1029,7 @@ function init(){
   // No more default seeding — start blank for new users.
   // Existing users' default rows get cleaned up by purgeDefaultsOnce() below.
   purgeDefaultsOnce();
-  // Migration: ensure new fields
+  // Migration: ensure new fields + type
   tasks.forEach(t=>{
     if(!t.status)t.status=t.completed?'completed':'pending';
     if(t.eta===undefined)t.eta='';
@@ -1038,6 +1038,10 @@ function init(){
     if(t.actHours===undefined)t.actHours=0;
     if(t.projectId===undefined)t.projectId=null;
     if(t.summary===undefined)t.summary='';
+    // Infer type: Outlook imports = meeting, everything else = task
+    if(t.type===undefined){
+      t.type=(t.summary==='從 Outlook 匯入')?'meeting':'task';
+    }
   });
   // UI state
   const ui=localStorage.getItem('dtd_ui');
@@ -1057,8 +1061,9 @@ function init(){
   render();
   startClock();
   setInterval(render,60000);
-  // Outlook auto-import disabled — user prefers manual control.
-  // To import the embedded OUTLOOK_MEETINGS list, click the 📅 button in the top toolbar.
+  // Auto-import Outlook meetings (as type='meeting', they show in the calendar view only —
+  // they will NOT pollute the todo board/list/table/gallery).
+  autoImportOutlookOnce();
   // Check for new email triage JSON (auto-fetched from repo)
   checkEmailTriage();
   // Re-check every 5 minutes — picks up new triage pushes without a refresh
@@ -1613,15 +1618,14 @@ function renderCalendar(){
   const days=[];for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d);}
   const weekLbl=`${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()} - ${days[6].getMonth()+1}/${days[6].getDate()}`;
   document.title=userName+' Daily Task Dashboard';
-  // Events: tasks with eta in this week, respecting the current quick filter
+  // Events on the calendar = meetings only (with eta in this week).
+  // Tasks live in board/list/table/gallery and are NOT shown here.
   const weekEnd=new Date(days[6]);weekEnd.setHours(23,59,59);
-  let events=tasks.filter(t=>{
+  const events=tasks.filter(t=>{
+    if(!isMeeting(t))return false;
     if(!t.eta)return false;
     const e=new Date(t.eta);return e>=start&&e<=weekEnd;
   });
-  // Honor the quick-filter pills (今日/明日/本週/已逾期/...) for consistency with other views.
-  // 'unscheduled' wouldn't show anything in calendar (no eta), so skip filtering then.
-  if(currentFilter!=='unscheduled')events=applyQuickFilter(events);
   const today=todayStr();
   const HOURS_START=8,HOURS_END=21,HOUR_PX=56;
   const hourLines=[];for(let h=HOURS_START;h<=HOURS_END;h++)hourLines.push(h);
@@ -1700,12 +1704,21 @@ function navWeekTo(dateStr){
   render();
 }
 
+/* -------- Type helpers --------
+   Each item in `tasks[]` has a `type` field: 'task' (manual todo) or 'meeting' (Outlook import).
+   Todo views / stats / counts ignore meetings. The weekly calendar shows only meetings. */
+function isTask(t){return (t.type||'task')==='task';}
+function isMeeting(t){return t.type==='meeting';}
+function taskOnly(){return tasks.filter(isTask);}
+function meetingOnly(){return tasks.filter(isMeeting);}
+
 /* -------- Stats / Hours -------- */
 function calcStats(){
-  const p=tasks.filter(t=>getStatus(t)==='pending').length;
-  const i=tasks.filter(t=>getStatus(t)==='in_progress').length;
-  const d=tasks.filter(t=>getStatus(t)==='completed').length;
-  const o=tasks.filter(t=>getStatus(t)==='overdue').length;
+  const T=taskOnly();
+  const p=T.filter(t=>getStatus(t)==='pending').length;
+  const i=T.filter(t=>getStatus(t)==='in_progress').length;
+  const d=T.filter(t=>getStatus(t)==='completed').length;
+  const o=T.filter(t=>getStatus(t)==='overdue').length;
   document.getElementById('sP').textContent=p;
   document.getElementById('sI').textContent=i;
   document.getElementById('sD').textContent=d;
@@ -1713,7 +1726,7 @@ function calcStats(){
 }
 function calcHours(){
   const now=new Date();const ws=startOfWeek(now);const we=new Date(ws);we.setDate(we.getDate()+7);
-  const inWeek=tasks.filter(t=>{
+  const inWeek=taskOnly().filter(t=>{
     if(t.dueDate){const d=new Date(t.dueDate+'T00:00:00');return d>=ws&&d<we;}
     if(t.eta){const d=new Date(t.eta);return d>=ws&&d<we;}
     return false;
@@ -1727,20 +1740,23 @@ function calcHours(){
   document.getElementById('hrsBar').style.width=pct+'%';
 }
 function calcFilterCounts(){
-  document.getElementById('fAll').textContent=tasks.length;
-  document.getElementById('fToday').textContent=tasks.filter(t=>t.dueDate===todayStr()).length;
-  document.getElementById('fTomorrow').textContent=tasks.filter(t=>t.dueDate===tomorrowStr()).length;
-  document.getElementById('fWeek').textContent=tasks.filter(t=>inThisWeek(t.dueDate)).length;
-  document.getElementById('fUns').textContent=tasks.filter(t=>!t.dueDate).length;
-  document.getElementById('fOver').textContent=tasks.filter(t=>getStatus(t)==='overdue').length;
+  const T=taskOnly();
+  document.getElementById('fAll').textContent=T.length;
+  document.getElementById('fToday').textContent=T.filter(t=>t.dueDate===todayStr()).length;
+  document.getElementById('fTomorrow').textContent=T.filter(t=>t.dueDate===tomorrowStr()).length;
+  document.getElementById('fWeek').textContent=T.filter(t=>inThisWeek(t.dueDate)).length;
+  document.getElementById('fUns').textContent=T.filter(t=>!t.dueDate).length;
+  document.getElementById('fOver').textContent=T.filter(t=>getStatus(t)==='overdue').length;
 }
 
 /* -------- Master render -------- */
 function render(){
   calcStats();calcHours();calcFilterCounts();updateSubtitle();
-  document.getElementById('taskCount').textContent=tasks.length;
+  const T=taskOnly();
+  document.getElementById('taskCount').textContent=T.length;
   renderProjects();
-  const filtered=applyQuickFilter(tasks);
+  // Todo views: filter to tasks only (meetings live in the calendar view)
+  const filtered=applyQuickFilter(T);
   const c=document.getElementById('viewContainer');
   if(currentView==='board')c.innerHTML=renderBoard(filtered);
   else if(currentView==='list')c.innerHTML=renderList(filtered);
@@ -1826,7 +1842,7 @@ const OUTLOOK_MEETINGS=[{"title":"Gaming DT Weekly meeting","dueDate":"2026-05-1
 
 /* Dataset version: bump when OUTLOOK_MEETINGS payload changes so auto-import
    runs again with the new schedule on existing users. */
-const OUTLOOK_DATASET_VERSION='v2';
+const OUTLOOK_DATASET_VERSION='v3';
 
 function _doImportOutlookMeetings(silent){
   // Dedupe by title+eta combo so re-clicking is idempotent.
@@ -1842,6 +1858,7 @@ function _doImportOutlookMeetings(silent){
     tasks.unshift({
       id:Date.now()+Math.random(),
       title:m.title,
+      type:'meeting',                // <-- meetings live only in the calendar view
       priority,
       category:'會議',
       dueDate:m.dueDate,
