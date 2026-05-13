@@ -977,10 +977,21 @@ html,body{overflow-x:hidden}
       <option value="其他">📌 其他</option>
     </select>
 
-    <label>Gemini API Key <span style="font-weight:400;color:var(--text-3);">— 截圖辨識用 (免費,1500 req/day)</span></label>
+    <label>Gemini API Key <span style="font-weight:400;color:var(--text-3);">— 截圖辨識用</span></label>
     <input type="password" id="setGeminiKey" placeholder="AIza...">
     <div class="helper-text">
       到 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a> 申請 (不需要信用卡)。Key 只存在您本機 localStorage。
+    </div>
+
+    <label>AI 任務模式 <span style="font-weight:400;color:var(--text-3);">— 依任務難度自動挑模型 (預設 auto 最省 quota)</span></label>
+    <select id="setAiTier">
+      <option value="auto">🤖 Auto (推薦) — OCR 用 Balanced,簡單分類用 Fast</option>
+      <option value="fast">🚀 Fast — Flash-Lite (~1000 req/day)</option>
+      <option value="balanced">⚖️ Balanced — 2.5-Flash (~250 req/day)</option>
+      <option value="smart">🧠 Smart — 2.5-Pro (~100 req/day) — 推理任務適用</option>
+    </select>
+    <div class="helper-text">
+      每個 tier 內建多 model fallback;429 quota 觸發自動降級。<strong>絕不會收費</strong>(AI Studio key 預設無 paid billing,超過免費額度只會回 429)。
     </div>
 
     <label>Outlook 會議自動匯入</label>
@@ -2231,6 +2242,59 @@ function handleTaskInputPaste(ev){
   // No image — let the default paste continue
 }
 
+/* -------- Gemini multi-tier client (free-tier safe) --------
+   Tier routing by task difficulty:
+     - fast      : simple classification (~1000+ RPD free)
+     - balanced  : OCR / structured extract (~250 RPD free)
+     - smart     : reasoning / planning (~100 RPD free)
+   On 429 quota, the failed model is put on a 1-hour cooldown and the chain
+   degrades within the tier, then to lower tiers. No paid charges possible
+   on an AI Studio key unless the user explicitly enables paid billing. */
+const GEMINI_TIERS={
+  fast:    ['gemini-2.5-flash-lite','gemini-flash-lite-latest','gemini-2.0-flash-lite'],
+  balanced:['gemini-2.5-flash',     'gemini-flash-latest',     'gemini-2.0-flash'],
+  smart:   ['gemini-2.5-pro',       'gemini-pro-latest'],
+};
+const _TIER_DESC_ORDER=['smart','balanced','fast'];  // smart strongest → fast cheapest
+const _quotaCooldown={}; // model -> timestamp set when 429 hit
+function _modelOnCooldown(m){const t=_quotaCooldown[m];return t&&(Date.now()-t)<60*60*1000;}
+function _buildCandidates(tier){
+  const start=_TIER_DESC_ORDER.indexOf(tier);
+  const out=[];
+  for(let i=start;i<_TIER_DESC_ORDER.length;i++){
+    GEMINI_TIERS[_TIER_DESC_ORDER[i]].forEach(m=>{if(!_modelOnCooldown(m))out.push(m);});
+  }
+  return out;
+}
+
+/* Call Gemini with smart fallback. opts: { tier, image, generationConfig } */
+async function geminiCall(prompt,opts={}){
+  const key=getSetting('gemini_key','');
+  if(!key)throw new Error('尚未填入 Gemini API Key (右上 ⚙ 設定)');
+  // Resolve tier: user preference can override, but never exceed budget
+  const userPref=getSetting('ai_tier','auto');
+  let tier=opts.tier||'balanced';
+  if(userPref!=='auto')tier=userPref;
+  const candidates=_buildCandidates(tier);
+  if(!candidates.length)throw new Error('所有模型今日 quota 都已用完 (~1 小時或太平洋午夜後重試)');
+  const parts=[{text:prompt}];
+  if(opts.image)parts.push({inline_data:opts.image});
+  const body={contents:[{parts}],generationConfig:opts.generationConfig||{temperature:0.2}};
+  let lastErr=null;
+  for(const model of candidates){
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+    try{
+      const resp=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      if(resp.status===429){_quotaCooldown[model]=Date.now();lastErr=`${model}: 429 (quota)`;continue;}
+      if(!resp.ok){const t=(await resp.text()).slice(0,200);lastErr=`${model}: HTTP ${resp.status}: ${t}`;continue;}
+      const json=await resp.json();
+      const text=json.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      return {model,text,raw:json};
+    }catch(e){lastErr=`${model}: ${e.message||e}`;}
+  }
+  throw new Error('全部 Gemini 模型呼叫失敗 · 最後錯誤: '+lastErr);
+}
+
 /* -------- OCR (Gemini Vision) -------- */
 let _ocrImageData=null; // base64 of pasted/dropped/uploaded image (no data: prefix)
 let _ocrMimeType='image/png';
@@ -2296,8 +2360,7 @@ function readOcrFile(f){
   r.readAsDataURL(f);
 }
 async function analyzeOcrImage(){
-  const key=getSetting('gemini_key','');
-  if(!key){alert('請先到 ⚙ 設定填入 Gemini API Key');return;}
+  if(!getSetting('gemini_key','')){alert('請先到 ⚙ 設定填入 Gemini API Key');return;}
   if(!_ocrImageData){alert('請先選或貼一張圖');return;}
   const statusEl=document.getElementById('ocrStatus');
   const resultEl=document.getElementById('ocrResult');
@@ -2332,26 +2395,13 @@ async function analyzeOcrImage(){
 
 只輸出 JSON 陣列,不要任何前後文字或 markdown。範例:
 [{"title":"回客戶 A 報價信","category":"工作","priority":"high","dueDate":"${today}","eta":""}]`;
-    const body={
-      contents:[{parts:[
-        {text:prompt},
-        {inline_data:{mime_type:_ocrMimeType,data:_ocrImageData}}
-      ]}],
+    // OCR is balanced tier — needs vision + structured output, free 250 RPD enough
+    const {model,text}=await geminiCall(prompt,{
+      tier:'balanced',
+      image:{mime_type:_ocrMimeType,data:_ocrImageData},
       generationConfig:{responseMimeType:'application/json',temperature:0.2}
-    };
-    // Model fallback chain (2026-05 — older names like 2.0-flash-exp / 1.5-flash were retired)
-    const MODELS=['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'];
-    let json=null,lastErr=null;
-    for(const model of MODELS){
-      try{
-        const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
-        const resp=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-        if(!resp.ok){lastErr=`HTTP ${resp.status}: ${(await resp.text()).slice(0,200)}`;continue;}
-        json=await resp.json();statusEl.textContent=`✅ Gemini ${model} 辨識完成`;break;
-      }catch(e){lastErr=e.message;}
-    }
-    if(!json)throw new Error('All models failed. Last error: '+lastErr);
-    const text=json.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    });
+    statusEl.textContent=`✅ Gemini ${model} 辨識完成`;
     const arr=parseOcrJson(text);
     if(!arr.length){throw new Error('Gemini 沒回任何項目');}
     renderOcrSuggestions(arr);
@@ -2420,6 +2470,7 @@ function openSettingsModal(){
   document.getElementById('setDefaultView').value=getSetting('default_view','board');
   document.getElementById('setDefaultCategory').value=getSetting('default_category','工作');
   document.getElementById('setGeminiKey').value=getSetting('gemini_key','');
+  document.getElementById('setAiTier').value=getSetting('ai_tier','auto');
   document.getElementById('setAutoOutlook').value=getSetting('auto_outlook','1');
   document.getElementById('settingsModal').classList.add('open');
 }
@@ -2444,6 +2495,8 @@ function saveSettingsModal(){
   document.getElementById('categorySelect').value=defCat;
   // Gemini key
   setSetting('gemini_key',document.getElementById('setGeminiKey').value.trim());
+  // AI tier preference
+  setSetting('ai_tier',document.getElementById('setAiTier').value);
   // Outlook auto-import toggle
   setSetting('auto_outlook',document.getElementById('setAutoOutlook').value);
   document.getElementById('settingsModal').classList.remove('open');
