@@ -837,6 +837,12 @@ html,body{overflow-x:hidden}
     </select>
     <select id="projectSelect"><option value="">— 關聯專案 —</option></select>
     <input type="date" id="dueDateInput">
+    <select id="aiTierSelect" onchange="setSetting('ai_tier',this.value);showUndo('AI 模式 → '+this.options[this.selectedIndex].text);" title="AI 任務模式 — 依任務難度自動挑模型,免費 quota 安全">
+      <option value="auto">🤖 Auto</option>
+      <option value="fast">🚀 Fast</option>
+      <option value="balanced">⚖️ Balanced</option>
+      <option value="smart">🧠 Smart</option>
+    </select>
     <button class="add-ocr-btn" onclick="openOcrModal()" title="從截圖辨識代辦事項 (Gemini Vision)">📷</button>
     <button class="btn-primary" onclick="addTask()">新增</button>
   </div>
@@ -981,17 +987,6 @@ html,body{overflow-x:hidden}
     <input type="password" id="setGeminiKey" placeholder="AIza...">
     <div class="helper-text">
       到 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a> 申請 (不需要信用卡)。Key 只存在您本機 localStorage。
-    </div>
-
-    <label>AI 任務模式 <span style="font-weight:400;color:var(--text-3);">— 依任務難度自動挑模型 (預設 auto 最省 quota)</span></label>
-    <select id="setAiTier">
-      <option value="auto">🤖 Auto (推薦) — OCR 用 Balanced,簡單分類用 Fast</option>
-      <option value="fast">🚀 Fast — Flash-Lite (~1000 req/day)</option>
-      <option value="balanced">⚖️ Balanced — 2.5-Flash (~250 req/day)</option>
-      <option value="smart">🧠 Smart — 2.5-Pro (~100 req/day) — 推理任務適用</option>
-    </select>
-    <div class="helper-text">
-      每個 tier 內建多 model fallback;429 quota 觸發自動降級。<strong>絕不會收費</strong>(AI Studio key 預設無 paid billing,超過免費額度只會回 429)。
     </div>
 
     <label>Outlook 會議自動匯入</label>
@@ -1193,11 +1188,16 @@ function init(){
   render();
   startClock();
   setInterval(render,60000);
-  // Apply user settings (default view / category)
+  // Apply user settings (default view / category / AI tier)
   const defView=localStorage.getItem('dtd_default_view');
   if(defView&&defView!==currentView)setView(defView,true);
   const defCat=localStorage.getItem('dtd_default_category');
   if(defCat)document.getElementById('categorySelect').value=defCat;
+  const aiTier=localStorage.getItem('dtd_ai_tier');
+  if(aiTier){
+    const sel=document.getElementById('aiTierSelect');
+    if(sel)sel.value=aiTier;
+  }
   // Auto-import Outlook meetings only if the user hasn't disabled it
   if(localStorage.getItem('dtd_auto_outlook')!=='0')autoImportOutlookOnce();
   // Check for new email triage JSON (auto-fetched from repo)
@@ -2470,7 +2470,6 @@ function openSettingsModal(){
   document.getElementById('setDefaultView').value=getSetting('default_view','board');
   document.getElementById('setDefaultCategory').value=getSetting('default_category','工作');
   document.getElementById('setGeminiKey').value=getSetting('gemini_key','');
-  document.getElementById('setAiTier').value=getSetting('ai_tier','auto');
   document.getElementById('setAutoOutlook').value=getSetting('auto_outlook','1');
   document.getElementById('settingsModal').classList.add('open');
 }
@@ -2495,8 +2494,7 @@ function saveSettingsModal(){
   document.getElementById('categorySelect').value=defCat;
   // Gemini key
   setSetting('gemini_key',document.getElementById('setGeminiKey').value.trim());
-  // AI tier preference
-  setSetting('ai_tier',document.getElementById('setAiTier').value);
+  // (AI tier is set inline in the add-bar dropdown, not here)
   // Outlook auto-import toggle
   setSetting('auto_outlook',document.getElementById('setAutoOutlook').value);
   document.getElementById('settingsModal').classList.remove('open');
