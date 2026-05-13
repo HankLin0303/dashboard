@@ -1057,8 +1057,8 @@ function init(){
   render();
   startClock();
   setInterval(render,60000);
-  // First-load Outlook import
-  autoImportOutlookOnce();
+  // Outlook auto-import disabled — user prefers manual control.
+  // To import the embedded OUTLOOK_MEETINGS list, click the 📅 button in the top toolbar.
   // Check for new email triage JSON (auto-fetched from repo)
   checkEmailTriage();
   // Re-check every 5 minutes — picks up new triage pushes without a refresh
@@ -1073,12 +1073,12 @@ function init(){
   }
 }
 
-/* -------- One-time cleanup of legacy default seed data --------
-   Removes the 7 default daily tasks + 2 default projects + the 5/4-5/8 sample calendar
-   events that used to be auto-seeded on first run. Outlook-imported meetings and any
-   user-created tasks are NOT touched (we match exact titles + dates only). */
+/* -------- One-time cleanup: wipe all auto-populated data --------
+   Removes: 7 default daily tasks + 2 default projects + 5/4-5/8 sample calendar +
+   any Outlook-imported meetings (summary === '從 Outlook 匯入').
+   User-created tasks are NOT touched. To re-import Outlook meetings, use 📅 button. */
 function purgeDefaultsOnce(){
-  const KEY='dtd_defaults_purged_v1';
+  const KEY='dtd_defaults_purged_v2';
   if(localStorage.getItem(KEY))return 0;
   const DEFAULT_TASK_TITLES=new Set([
     '查看今日郵件並回覆重要信件','完成 Q2 季度報告','部門會議',
@@ -1095,9 +1095,9 @@ function purgeDefaultsOnce(){
   const DEFAULT_PROJ_NAMES=new Set(['Q2 業績達標','個人健身計畫']);
   const before=tasks.length;
   tasks=tasks.filter(t=>{
-    // Skip if it's an Outlook import (different summary marker)
-    if(t.summary==='從 Outlook 匯入')return true;
-    // Daily seed tasks: exact title match (any date)
+    // v2: also remove auto-imported Outlook meetings (user wants full manual control)
+    if(t.summary==='從 Outlook 匯入')return false;
+    // Default daily seed tasks: exact title match
     if(DEFAULT_TASK_TITLES.has(t.title))return false;
     // Calendar seed events: exact title + within 5/4-5/8 range
     if(CAL_SEED_TITLES.has(t.title)&&SEED_DATES.has(t.dueDate))return false;
@@ -1107,9 +1107,10 @@ function purgeDefaultsOnce(){
   projects=projects.filter(p=>!DEFAULT_PROJ_NAMES.has(p.name));
   const removed=before-tasks.length;
   const projRemoved=projBefore-projects.length;
-  // Always mark done so we don't re-run, and block legacy seedCalendarMay2026 just in case
+  // Mark done + block legacy seeds + reset Outlook auto-import flag so it stays disabled
   localStorage.setItem(KEY,String(Date.now()));
   localStorage.setItem('dtd_seed_may2026','1');
+  localStorage.removeItem('dtd_outlook_imported_version');
   if(removed>0||projRemoved>0){save();}
   return removed;
 }
