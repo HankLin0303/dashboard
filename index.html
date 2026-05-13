@@ -2420,6 +2420,34 @@ function saveSettingsModal(){
   showUndo('⚙ 設定已儲存');
 }
 
+/* -------- One-time URL-based key installer --------
+   Visit ?gemini_key=XXX or #gemini_key=XXX once → saved to localStorage → URL cleaned.
+   Lets us hand someone a one-click install link without baking the key into the repo. */
+(function installKeyFromUrl(){
+  try{
+    const qs=new URLSearchParams(window.location.search);
+    const hash=window.location.hash.startsWith('#')?window.location.hash.slice(1):'';
+    const hs=new URLSearchParams(hash);
+    const SUPPORTED=['gemini_key'];
+    let changed=false;
+    SUPPORTED.forEach(k=>{
+      const v=qs.get(k)||hs.get(k);
+      if(v){
+        localStorage.setItem('dtd_'+k,v);
+        qs.delete(k);hs.delete(k);changed=true;
+        // toast after init finishes
+        setTimeout(()=>{if(typeof showUndo==='function')showUndo('🔑 '+k+' 已自動安裝到本機');},1600);
+      }
+    });
+    if(changed){
+      const newSearch=qs.toString();
+      const newHash=hs.toString();
+      const url=window.location.pathname+(newSearch?'?'+newSearch:'')+(newHash?'#'+newHash:'');
+      history.replaceState({},'',url);
+    }
+  }catch(e){console.warn('installKeyFromUrl failed',e);}
+})();
+
 /* -------- PWA service worker registration -------- */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
